@@ -25,42 +25,41 @@ public class JwtService {
 
     @Value("404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970")
     private String secretKey;
+
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
+
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
 
+    // Extract username from the token
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
+    // Generic method to extract claims
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
+    // Generate JWT for user details
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
     }
 
-    public String generateToken(
-            Map<String, Object> extraClaims,
-            UserDetails userDetails
-    ) {
+    // Generate JWT with extra claims
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 
-    public String generateRefreshToken(
-            UserDetails userDetails
-    ) {
+    // Generate refresh token
+    public String generateRefreshToken(UserDetails userDetails) {
         return buildToken(new HashMap<>(), userDetails, refreshExpiration);
     }
 
-    private String buildToken(
-            Map<String, Object> extraClaims,
-            UserDetails userDetails,
-            long expiration
-    ) {
+    // Build JWT token
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
@@ -71,19 +70,23 @@ public class JwtService {
                 .compact();
     }
 
+    // Validate the token
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
-    private boolean isTokenExpired(String token) {
+    // Check if the token is expired
+    public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
+    // Extract expiration date from the token
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    // Extract all claims from the token
     private Claims extractAllClaims(String token) {
         validateJwtFormat(token);
         return Jwts
@@ -94,15 +97,19 @@ public class JwtService {
                 .getBody();
     }
 
+    // Get signing key
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    // Validate JWT format
     private void validateJwtFormat(String token) {
         if (token == null || token.split("\\.").length != 3) {
-            log.error("Invalid JWT format: {}", token);
-            throw new MalformedJwtException("JWT strings must contain exactly 2 period characters. Found: " + (token == null ? 0 : token.split("\\.").length - 1));
+            throw new MalformedJwtException("JWT strings must contain exactly 2 period characters. Found: " +
+                    (token == null ? 0 : token.split("\\.").length - 1));
         }
     }
+
+
 }

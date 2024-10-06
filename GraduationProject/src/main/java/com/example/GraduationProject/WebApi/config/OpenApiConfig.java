@@ -14,11 +14,11 @@ import io.swagger.v3.oas.annotations.servers.Server;
 @OpenAPIDefinition(
         info = @Info(
                 contact = @Contact(
-                        name = "Mohammad AbuThaher",
-                        email = "1202833@Students.Birzeit.edu"
+                        name = "Yazan Zidan",
+                        email = "yazoonzidan@gmail.com"
                 ),
-                description = "OpenApi documentation for Project Training API",
-                title = "Project Training API",
+                description = "OpenApi documentation for Graduation Project",
+                title = "Graduation Project",
                 version = "1.0",
                 license = @License(
                         name = "No License",

@@ -8,11 +8,13 @@
 		<version>3.3.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+
 	<groupId>com.example</groupId>
 	<artifactId>GraduationProject</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>GraduationProject</name>
 	<description>Demo project for Spring Boot</description>
+
 	<url/>
 	<licenses>
 		<license/>
@@ -29,6 +31,7 @@
 	<properties>
 		<java.version>22</java.version>
 	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -152,5 +155,6 @@
 			</plugin>
 		</plugins>
 	</build>
+
 
 </project>

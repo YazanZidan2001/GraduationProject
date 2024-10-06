@@ -23,24 +23,25 @@ public enum Role {
     DOCTOR(
             Set.of(
                     Permission.DOCTOR_READ,
-                    Permission.DOCTOR_UPDATE
+                    Permission.DOCTOR_UPDATE,
+                    Permission.DOCTOR_DELETE,
+                    Permission.DOCTOR_CREATE
             )
     ),
-    SECRETARY(
+    SUPER_ADMIN(
             Set.of(
-                    Permission.SECRETARY_READ,
-                    Permission.SECRETARY_UPDATE
+                    Permission.SUPER_ADMIN_READ,
+                    Permission.SUPER_ADMIN_UPDATE,
+                    Permission.SUPER_ADMIN_DELETE,
+                    Permission.SUPER_ADMIN_CREATE
             )
     ),
-    WAREHOUSE_EMPLOYEE(
-            Set.of(
-                    Permission.DRUG_STORE_EMPLOYEE_READ,
-                    Permission.DRUG_STORE_EMPLOYEE_UPDATE
-            )
-    ),PATIENT(
+    PATIENT(
             Set.of(
                     Permission.PATIENT_READ,
-                    Permission.PATIENT_UPDATE
+                    Permission.PATIENT_UPDATE,
+                    Permission.PATIENT_DELETE,
+                    Permission.PATIENT_CREATE
             ));
 
     private final Set<Permission> permissions;

@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
@@ -22,30 +23,18 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    // Define URLs that are open to everyone (no authentication required)
-    private static final String[] WHITE_LIST_URL = {
-            "/auth/**",
+    private static final String[] WHITE_LIST_URL = {"/auth/**","/admin/user/**",
             "/v2/api-docs",
             "/v3/api-docs",
             "/v3/api-docs/**",
-            "http://127.0.0.1:5500",
+            "http://127.0.0.1:5500/**",
+            "http://127.0.0.1:3000/**",
             "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/resetPasswordPage"
-    };
+            "/swagger-ui.html","/resetPasswordPage" ,};
 
-    // Autowired dependencies
-    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
     private final LogoutHandler logoutHandler;
-
-    // Bean definition for custom LogoutHandler
-    @Bean
-    public LogoutHandler logoutHandler() {
-        return new CustomLogoutHandler();
-    }
-
-    // Security filter chain configuration
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -58,15 +47,13 @@ public class SecurityConfiguration {
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(logout ->
                         logout.logoutUrl("/api/v1/auth/logout")
-                                .addLogoutHandler(logoutHandler) // Custom LogoutHandler
-                                .logoutSuccessHandler((request, response, authentication) ->
-                                        SecurityContextHolder.clearContext())
+                                .addLogoutHandler(logoutHandler)
+                                .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())
                 )
                 .cors(withDefaults());
-
         return http.build();
     }
 }

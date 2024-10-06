@@ -1,0 +1,59 @@
+application:
+  security:
+    jwt:
+      secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      expiration: '86400000'
+      refresh-token:
+        expiration: '604800000'
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      ddl-auto: update  # Update schema without dropping existing tables
+    show-sql: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: yazoonzidan@gmail.com
+    password: ozkn jrgh mmhd ebed  # Gmail App password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            enable: false
+          from: yazoonzidan@gmail.com  # Explicitly specify the "from" address
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      enabled: 'true'
+      max-request-size: 10MB
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/graduation_project
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+logging:
+  level:
+    com:
+      example: DEBUG
+    root: INFO
+
+server:
+  port: ${PORT:8080}
+  spring:
+    resources:
+      cache:
+        period: 0
