@@ -1,5 +1,6 @@
 package com.example.GraduationProject.Common.Entities;
 
+import com.example.GraduationProject.Common.CompositeKey.ExperienceId;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -15,16 +16,17 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Entity
 @Table(name = "experience")
+@IdClass(ExperienceId.class)  // Use the composite key class
 public class Experience {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "experience_id")
-    private long experienceId;
+    private Long experienceId;
 
-    @Column(name = "doctor_id", nullable = false)
+    @Id
+    @Column(name = "doctor_id")
     @NotNull(message = "Doctor ID cannot be blank")
-    private Long doctorId; // Use Long if doctor_id in Doctor is Long
+    private Long doctorId;
 
     @Column(name = "institution", nullable = false)
     @NotNull(message = "Institution cannot be blank")
@@ -41,7 +43,7 @@ public class Experience {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "doctor_id", insertable = false, updatable = false)
     private Doctor doctor;
 }
