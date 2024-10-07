@@ -1,5 +1,6 @@
 package com.example.GraduationProject.Common.Entities;
 
+import com.example.GraduationProject.Common.CompositeKey.QualificationId;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -13,12 +14,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "qualification")
+@IdClass(QualificationId.class)  // Use the composite key class
 public class Qualification {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "qualification_id")
-    private long qualificationId;
+    private Long qualificationId;  // Remove @GeneratedValue since composite keys can't use it
 
     @Id
     @Column(name = "doctor_id")
