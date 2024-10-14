@@ -1,6 +1,7 @@
 package com.example.GraduationProject.Common.Responses;
 
 
+import com.example.GraduationProject.Common.Enums.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,8 +16,12 @@ public class AuthenticationResponse {
 
     @JsonProperty("access_token")
     private String accessToken;
+
     @JsonProperty("refresh_token")
     private String refreshToken;
+
+    @JsonProperty("Role")
+    private Role role;
 
     @JsonProperty("message")
     private String message;

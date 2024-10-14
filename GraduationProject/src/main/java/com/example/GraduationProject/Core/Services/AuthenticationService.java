@@ -171,9 +171,11 @@ public class AuthenticationService {
         var refreshToken = jwtService.generateRefreshToken(user);
         revokeAllUserTokens(user);
         saveUserToken(user, jwtToken);
+        Role userRole = user.getRole();
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
+                .role(userRole)  // Set the user's role in the response
                 .message("User LoggedIn successfully")
                 .build();
     }
