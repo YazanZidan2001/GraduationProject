@@ -32,4 +32,11 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
     // Find all doctors (if user is not deleted)
     @Query("SELECT d FROM Doctor d WHERE d.user.isDeleted = false")
     Page<Doctor> findAll(Pageable pageable);
+
+
+    // Find doctors by search query and specialization (if user is not deleted)
+    @Query("SELECT d FROM Doctor d WHERE d.user.isDeleted = false AND " +
+            "(:search IS NULL OR :search = '' OR d.user.firstName LIKE %:search% OR d.user.lastName LIKE %:search% OR " +
+            "d.user.email LIKE %:search% OR d.user.phone LIKE %:search%)")
+    Page<Doctor> findAll(Pageable pageable, @Param("search") String search);
 }

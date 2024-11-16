@@ -166,6 +166,27 @@ public class DoctorService {
         return paginationDTO;
     }
 
+    @Transactional
+    public PaginationDTO<Doctor> getAllDoctors(int page, int size, String search) {
+        if (page < 1) {
+            page = 1;
+        }
+        if (search != null && search.isEmpty()) {
+            search = null;
+        }
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Doctor> doctors = doctorRepository.findAll(pageable, search);
+        PaginationDTO<Doctor> paginationDTO = new PaginationDTO<>();
+        paginationDTO.setTotalElements(doctors.getTotalElements());
+        paginationDTO.setTotalPages(doctors.getTotalPages());
+        paginationDTO.setSize(doctors.getSize());
+        paginationDTO.setNumber(doctors.getNumber() + 1);
+        paginationDTO.setNumberOfElements(doctors.getNumberOfElements());
+        paginationDTO.setContent(doctors.getContent());
+        return paginationDTO;
+    }
+
     private void saveUserToken(User user, String jwtToken) {
         var token = Token.builder()
                 .user(user)

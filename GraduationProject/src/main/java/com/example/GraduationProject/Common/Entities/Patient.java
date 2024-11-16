@@ -23,10 +23,10 @@ public class Patient {
     @Column(name = "patient_id", nullable = false, unique = true)
     private long patientId;
 
-    @Column(name = "blood_type", nullable = false)
+    @Column(name = "blood_type", nullable = true)
     @Enumerated(EnumType.STRING)
-    @NotNull(message = "Blood type cannot be blank")
-    private BloodTypes bloodType; // This can directly store the BloodTypes enum
+//    @NotNull(message = "Blood type cannot be blank")
+    private BloodTypes bloodType;
 
     @Column(name = "gender", nullable = false)
     @NotNull(message = "Gender cannot be blank")

@@ -4,6 +4,7 @@ package com.example.GraduationProject.Core.Services;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,9 @@ public class EmailService {
     @Autowired
     private JavaMailSender emailSender;
 
-    public void sendVerificationEmail(String to, String subject, String verificationUrl) throws MessagingException {
+
+
+    public void sendPasswordResetEmail(String to, String subject, String verificationUrl) throws MessagingException {
         MimeMessage message = emailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
@@ -33,13 +36,15 @@ public class EmailService {
                 + "cursor: pointer; "
                 + "box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); "
                 + "\">Rest password</a>";
-      helper.setFrom("yazoonzidan@gmail.com");
+
+        helper.setFrom("yazoonzidan@gmail.com");
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(content, true);
 
         emailSender.send(message);
     }
+
 
     public void sentNotificationEmail(String to, String subject, String message) throws MessagingException {
         MimeMessage mimeMessage = emailSender.createMimeMessage();

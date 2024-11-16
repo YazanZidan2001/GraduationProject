@@ -10,4 +10,7 @@ import java.util.Optional;
 public interface ClinicRepository extends JpaRepository<Clinic, Long> {
     // Find a clinic by its name
     Optional<Clinic> findByClinicName(String clinicName);
+
+    @Override
+    Optional<Clinic> findById(Long aLong);
 }
