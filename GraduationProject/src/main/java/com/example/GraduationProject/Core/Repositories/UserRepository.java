@@ -18,6 +18,10 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.email = :email AND u.isDeleted = false")
     Optional<User> findByEmail(String email);
+
+    @Query("SELECT u FROM User u WHERE u.phone = :phone AND u.isDeleted = false")
+    Optional<User> findByPhone(@Param("phone") String phone);
+
     // make a query to get the user when the user is deleted equal to false
     @Query("SELECT u FROM User u WHERE u.isDeleted = false AND u.UserID = :UserID")
     Optional<User> findById(@Param("UserID") Long UserID);

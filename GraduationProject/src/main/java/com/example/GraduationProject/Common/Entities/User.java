@@ -17,8 +17,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
-
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -31,7 +29,6 @@ public class User implements UserDetails {
     @Column(name = "UserID")
     @JsonProperty("userID") // Maps the JSON property to the Java field
     private Long UserID;
-
 
     @Column(name = "email", unique = true, nullable = false)
     @NotNull(message = "Email cannot be blank")
@@ -71,17 +68,25 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<VerificationCode> verificationCodes;
+
     @OneToMany(mappedBy = "user")
     @JsonIgnore
     private List<Token> tokens;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL , fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonBackReference("doctorUser")
     private Doctor doctor;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL , fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonBackReference("patientUser")
     private Patient patient;
+
+    // New field for 2FA preference
+    @Column(name = "preferred2faMethod", nullable = true)
+    private String preferred2faMethod; // "email" or "phone"
 
     @Override
     @JsonIgnore

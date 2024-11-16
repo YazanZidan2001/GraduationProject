@@ -10,6 +10,4 @@ import java.util.Optional;
 public interface EmailRepository extends JpaRepository<Email, Long> {
     @Query("SELECT e FROM Email e WHERE e.email = :email and e.verified = false")
     Optional<Email> findByEmail(@Param("email") String email);
-
-
 }

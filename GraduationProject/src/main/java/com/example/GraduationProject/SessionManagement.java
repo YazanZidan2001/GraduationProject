@@ -12,7 +12,7 @@ public class SessionManagement {
     }
 
     public void validateLoggedInDoctor(User user) throws UserNotFoundException {
-        if(user.getRole() != Role.ADMIN && user.getRole() != Role.DOCTOR){
+        if(user.getRole() != Role.DOCTOR){
             throw new UserNotFoundException("You are not authorized to perform this operation");
         }
     }

@@ -45,6 +45,20 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final EmailRepository emailRepository;
 
+
+
+    public User getUserByContactInfo(String contactInfo) throws UserNotFoundException {
+        // Check if contactInfo matches email format
+        if (contactInfo.contains("@")) {
+            return repository.findByEmail(contactInfo)
+                    .orElseThrow(() -> new UserNotFoundException("User not found with provided email: " + contactInfo));
+        } else {
+            // Assume contactInfo is a phone number
+            return repository.findByPhone(contactInfo)
+                    .orElseThrow(() -> new UserNotFoundException("User not found with provided phone number: " + contactInfo));
+        }
+    }
+
     @Transactional
     public AuthenticationResponse addUser(Long userId, User user) throws UserNotFoundException, IOException {
         // Check if the UserID already exists
@@ -56,7 +70,7 @@ public class AuthenticationService {
         user.setUserID(userId);
 
         // Validate email format or other fields as needed
-        validateUser(user);
+//        validateUser(user);
 
         // Encode the password and set deletion status
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -78,14 +92,9 @@ public class AuthenticationService {
                 .build();
     }
 
-    // Example validation method
-    private void validateUser(User user) {
-        // Add custom validation logic, such as checking email format
+    public void updateUser(User user) {
+        repository.save(user);
     }
-
-
-
-
 
     @Transactional
     public GeneralResponse UpdateUser(User userRequest, Long id) throws UserNotFoundException {
@@ -155,32 +164,50 @@ public class AuthenticationService {
         return repository.findAllByRole(role, pageable);
     }
 
+    public void authenticateUserPassword(User user, String password) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getEmail(), password)
+        );
+    }
+
     @Transactional
     public AuthenticationResponse authenticate(LoginDTO request) throws UserNotFoundException {
+        // Determine if contactInfo is an email or phone
+        User user;
+        if (request.getContactInfo().contains("@")) {
+            // Treat as email
+            user = repository.findByEmail(request.getContactInfo())
+                    .orElseThrow(() -> new UserNotFoundException("User not found with provided email"));
+        } else {
+            // Treat as phone number
+            user = repository.findByPhone(request.getContactInfo())
+                    .orElseThrow(() -> new UserNotFoundException("User not found with provided phone number"));
+        }
+
+        // Authenticate the user
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
+                        user.getEmail(), // Use user's email for authentication
                         request.getPassword()
                 )
         );
-        var user = repository.findByEmail(request.getEmail())
-                .orElseThrow(
-                        () -> new UserNotFoundException("User not found")
-                );
+
+        // Generate tokens
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
         revokeAllUserTokens(user);
         saveUserToken(user, jwtToken);
-        Role userRole = user.getRole();
+
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
-                .role(userRole)  // Set the user's role in the response
+                .role(user.getRole())
                 .message("User LoggedIn successfully")
                 .build();
     }
 
-    private void saveUserToken(User user, String jwtToken) {
+
+    public void saveUserToken(User user, String jwtToken) {
         var token = Token.builder()
                 .user(user)
                 .token(jwtToken)
@@ -192,7 +219,7 @@ public class AuthenticationService {
     }
 
 
-    private void revokeAllUserTokens(User user) {
+    public void revokeAllUserTokens(User user) {
         var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getUserID());
         if (validUserTokens.isEmpty())
             return;
@@ -259,7 +286,7 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public void sendVerificationCode(String email) throws UserNotFoundException, MessagingException {
+    public void sendPasswordResetEmail(String email) throws UserNotFoundException, MessagingException {
         var userEmail = repository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -271,7 +298,7 @@ public class AuthenticationService {
                 .build();
         emailRepository.save(emailEntity);
         String verificationUrl = "http://localhost:8080/resetPasswordPage?verificationCode=" + verificationCode + "&email=" + email;
-        emailService.sendVerificationEmail(email, "Email Verification", verificationUrl);
+        emailService.sendPasswordResetEmail(email, "Email Verification", verificationUrl);
     }
 
     @Transactional
@@ -307,87 +334,6 @@ public class AuthenticationService {
             throw new UserNotFoundException("Invalid old password");
         }
     }
-
-//    @Transactional
-//    public GeneralResponse CheckIn(Long userId,Long madebyUser) throws UserNotFoundException {
-//        var user = repository.findById(userId)
-//                .orElseThrow(() -> new UserNotFoundException("User not found"));
-//
-//        var madeByUser = repository.findById(madebyUser)
-//                .orElseThrow(() -> new UserNotFoundException("User not found"));
-//        if (user.getRole().equals(Role.PATIENT)) {
-//            throw new UserNotFoundException("Patients cannot check in");
-//        }
-//
-//        var lastRecord = user.getUserCheckInOuts().stream()
-//                .filter(record -> "CHECKED_IN".equals(record.getStatus()))
-//                .findFirst();
-//
-//        if (lastRecord.isPresent()) {
-//            return GeneralResponse.builder()
-//                    .message("User is already checked in")
-//                    .build();
-//        }
-//
-//        var checkInRecord = UserCheckInOut.builder()
-//                .user(user)
-//                .checkIn(LocalDateTime.now())
-//                .status("CHECKED_IN")
-//                .madeByUser(madeByUser)
-//                .build();
-//        user.getUserCheckInOuts().add(checkInRecord);
-//        repository.save(user);
-//
-//        return GeneralResponse.builder()
-//                .message("User checked in successfully")
-//                .build();
-//    }
-
-//    @Transactional
-//    public GeneralResponse checkOut(Long userId, Long madebyUser) throws UserNotFoundException {
-//        var user = repository.findById(userId)
-//                .orElseThrow(() -> new UserNotFoundException("User not found"));
-//        var madeByUser = repository.findById(madebyUser)
-//                .orElseThrow(() -> new UserNotFoundException("User not found"));
-//
-//        var lastRecord = user.getUserCheckInOuts().stream()
-//                .filter(record -> "CHECKED_IN".equals(record.getStatus()))
-//                .findFirst()
-//                .orElseThrow(() -> new UserNotFoundException("User has not checked in yet"));
-//
-//        LocalDateTime checkOutTime = LocalDateTime.now();
-//        lastRecord.setCheckOut(checkOutTime);
-//        long hoursWorked = java.time.Duration.between(lastRecord.getCheckIn(), checkOutTime).toHours();
-//        lastRecord.setHoursWorked((double) hoursWorked);
-//        lastRecord.setStatus("CHECKED_OUT");
-//        lastRecord.setMadeByUser(madeByUser);
-//
-//        Map<String, Object> salary = user.getSalary();
-//
-//        String salaryType = (String) salary.get("salaryType");
-//
-//        if (!salary.containsKey("hourWork")) {
-//            salary.put("hourWork", 0.0);
-//        }
-//        double totalWork = ((Number) salary.get("hourWork")).doubleValue();
-//        totalWork += hoursWorked;
-//        salary.put("hourWork", totalWork);
-//
-//
-//        if ("HOURLY".equals(salaryType)) {
-//            double hourRate = ((Number) salary.get("hourRate")).doubleValue();
-//            salary.put("hourWork", totalWork);
-//        } else if ("MONTHLY".equals(salaryType)) {
-//            adjustMonthlySalary(user, hoursWorked);
-//        }
-//
-//        repository.save(user);
-//
-//        return GeneralResponse.builder()
-//                .message("User checked out successfully")
-//                .build();
-//    }
-
 
 
     @Transactional

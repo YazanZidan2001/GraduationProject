@@ -61,7 +61,7 @@ public class DoctorController extends SessionManagement {
         return ResponseEntity.ok(doctor);
     }
 
-    @GetMapping("")
+    @GetMapping("getAllDoctors-by-specialization")
     public PaginationDTO<Doctor> getAllDoctors(@RequestParam(defaultValue = "1") int page,
                                                @RequestParam(defaultValue = "10") int size,
                                                @RequestParam(defaultValue = "",required = false) String search ,
@@ -71,6 +71,17 @@ public class DoctorController extends SessionManagement {
         User user = service.extractUserFromToken(token);
         validateLoggedInAdmin(user);
         return doctorService.getAllDoctors(page, size, search, String.valueOf(specialization));
+    }
+
+    @GetMapping("getAllDoctors")
+    public PaginationDTO<Doctor> getAllDoctors(@RequestParam(defaultValue = "1") int page,
+                                               @RequestParam(defaultValue = "10") int size,
+                                               @RequestParam(defaultValue = "",required = false) String search ,
+                                               HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        String token = service.extractToken(httpServletRequest);
+        User user = service.extractUserFromToken(token);
+        validateLoggedInAdmin(user);
+        return doctorService.getAllDoctors(page, size, search);
     }
 
 
