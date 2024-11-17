@@ -57,6 +57,7 @@ public class DoctorService {
             // Set role and encode password for the new user
             user.setRole(Role.DOCTOR);
             user.setPassword(passwordEncoder.encode(user.getPassword()));
+            user.setActive(true);
 
             // Save the new user
             user = userRepository.save(user);

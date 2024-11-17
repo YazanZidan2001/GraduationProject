@@ -75,6 +75,7 @@ public class AuthenticationService {
         // Encode the password and set deletion status
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setDeleted(false);
+        user.setActive(true);
 
         // Save user with manually assigned UserID
         var savedUser = repository.save(user);

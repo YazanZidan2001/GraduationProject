@@ -1,5 +1,6 @@
 package com.example.GraduationProject.Core.Services;
 
+import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
@@ -17,7 +18,11 @@ public class ClinicService {
     private final ClinicRepository clinicRepository;
 
     @Transactional
-    public void addClinic(Clinic clinic) {
+    public void addClinic(Clinic clinic) throws NotFoundException {
+        // Check if a clinic with the same name, address, and street exists
+        if (clinicRepository.findByClinicNameAndAddressAndStreet(clinic.getClinicName(), clinic.getAddress(), clinic.getStreet()).isPresent()) {
+            throw new NotFoundException("A clinic with the same name, address, and street already exists.");
+        }
         clinicRepository.save(clinic);
     }
 

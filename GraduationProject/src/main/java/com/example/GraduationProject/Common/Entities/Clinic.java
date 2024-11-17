@@ -27,4 +27,12 @@ public class Clinic {
     @Column(name = "address", nullable = false)
     @NotNull(message = "Address cannot be blank")
     private String address;
+
+    @Column(name = "street", nullable = false)
+    @NotNull(message = "Street cannot be blank")
+    private String street;
+
+    @Column(name = "phone", nullable = false)
+    @NotNull(message = "Phone cannot be blank")
+    private String phone;
 }

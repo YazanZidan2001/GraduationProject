@@ -45,6 +45,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Extract JWT from the Authorization header
         jwt = authHeader.substring(7);
+
+        // Check if the JWT token is properly formatted
+        if (jwt.isEmpty() || jwt.split("\\.").length != 3) {
+            logger.warn("Invalid JWT format received. Skipping authentication for this request.");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             // Extract the username from the JWT
             username = jwtService.extractUsername(jwt);
@@ -74,7 +82,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (MalformedJwtException e) {
-            logger.error("Invalid JWT format: " + jwt, e);
+            // Log malformed token as a warning and skip further processing
+            logger.warn("Malformed JWT token: " + jwt, e);
         }
 
         // Continue the filter chain

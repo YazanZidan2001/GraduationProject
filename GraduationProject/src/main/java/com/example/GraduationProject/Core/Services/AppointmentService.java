@@ -20,20 +20,20 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
-    private  final ClinicRepository   clinicRepository;
+    private  final ClinicRepository  clinicRepository;
+    private final AppointmentNotificationService AppNotificationService;
 
     @Transactional
     public void addAppointment(Appointment appointment) throws NotFoundException {
-        // Fetch the Clinic entity using clinicID
         Long clinicID = appointment.getClinicID();
         Clinic clinic = clinicRepository.findById(clinicID)
                 .orElseThrow(() -> new NotFoundException("Clinic not found with ID: " + clinicID));
 
-        // Set the Clinic entity in the appointment
         appointment.setClinic(clinic);
-
-        // Save the appointment
         appointmentRepository.save(appointment);
+
+        // Create a notification for this appointment
+        AppNotificationService.createNotification(appointment);
     }
 
     @Transactional

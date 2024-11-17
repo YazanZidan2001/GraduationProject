@@ -1,7 +1,6 @@
 package com.example.GraduationProject.Common.Entities;
 
 import com.example.GraduationProject.Common.CompositeKey.AppointmentCompositeKey;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -18,7 +17,7 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "appointment")
-@IdClass(AppointmentCompositeKey.class) // Specify the composite key class
+@IdClass(AppointmentCompositeKey.class)
 public class Appointment {
 
     @Id

@@ -1,6 +1,7 @@
 package com.example.GraduationProject.WebApi.Controllers.Admin.Clinic;
 
 import com.example.GraduationProject.WebApi.Exceptions.ClinicNotFoundException;
+import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.SessionManagement;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import com.example.GraduationProject.Common.Responses.GeneralResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,12 +25,18 @@ public class ClinicController extends SessionManagement {
     private final AuthenticationService service;
 
     @PostMapping("/")
-    public ResponseEntity<GeneralResponse> addClinic(@RequestBody @Valid Clinic request, HttpServletRequest httpServletRequest) throws UserNotFoundException {
+    public ResponseEntity<GeneralResponse> addClinic(@RequestBody @Valid Clinic request, HttpServletRequest httpServletRequest) throws UserNotFoundException, NotFoundException {
         String token = service.extractToken(httpServletRequest);
         User user = service.extractUserFromToken(token);
         validateLoggedInAdmin(user);
-        clinicService.addClinic(request);
-        return ResponseEntity.ok(GeneralResponse.builder().message("Clinic added successfully").build());
+
+        try {
+            clinicService.addClinic(request);
+            return ResponseEntity.ok(GeneralResponse.builder().message("Clinic added successfully").build());
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(GeneralResponse.builder().message(e.getMessage()).build());
+        }
     }
 
     @PutMapping("/{clinicId}")

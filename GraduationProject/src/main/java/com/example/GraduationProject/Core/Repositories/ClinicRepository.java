@@ -13,4 +13,7 @@ public interface ClinicRepository extends JpaRepository<Clinic, Long> {
 
     @Override
     Optional<Clinic> findById(Long aLong);
+
+    Optional<Clinic> findByClinicNameAndAddressAndStreet(String clinicName, String address, String street);
+
 }
