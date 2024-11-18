@@ -20,6 +20,7 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
     List<Token> findAllValidTokenByUser(Long id);
 
     Optional<Token> findByToken(String token);
+
     @Query(value = """
       select t from Token t inner join User u\s
       on t.user.UserID = u.UserID\s
@@ -29,6 +30,7 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
 
     @Query("SELECT t FROM Token t WHERE t.expired = true")
     List<Token> findAllByExpiredTrue();
+
     @Modifying
     @Transactional
     @Query("delete from Token t where t.id = :id")

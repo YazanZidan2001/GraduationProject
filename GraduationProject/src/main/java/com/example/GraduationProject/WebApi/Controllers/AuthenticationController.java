@@ -37,6 +37,20 @@ public class AuthenticationController extends SessionManagement {
 
     private final JwtService jwtService;
 
+    @GetMapping("/extract-user-id")
+    public ResponseEntity<Long> extractUserIdFromToken(HttpServletRequest request) throws UserNotFoundException {
+        // Get the token from the Authorization header
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        String token = authHeader.substring(7); // Remove "Bearer " prefix
+
+        // Use the service method to extract the userId
+        Long userId = service.getUserIdByToken(token);
+
+        return ResponseEntity.ok(userId);
+    }
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> Login(@RequestBody @Valid LoginDTO request) throws UserNotFoundException {

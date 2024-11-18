@@ -59,6 +59,15 @@ public class AuthenticationService {
         }
     }
 
+    public Long getUserIdByToken(String token) throws UserNotFoundException {
+        // Find the token by its value
+        Token tokenEntity = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new UserNotFoundException("Token not found"));
+
+        // Return the associated user's ID
+        return tokenEntity.getUser().getUserID();
+    }
+
     @Transactional
     public AuthenticationResponse addUser(Long userId, User user) throws UserNotFoundException, IOException {
         // Check if the UserID already exists
@@ -264,6 +273,7 @@ public class AuthenticationService {
         }
         return null;
     }
+
 
     public User extractUserFromToken(String token) {
         String username = jwtService.extractUsername(token);

@@ -30,7 +30,7 @@ public class PatientDisease {
     @NotNull(message = "Disease name cannot be blank")
     private String diseaseName;  // The disease name part of the composite key
 
-    @Column(name = "disease_date")
+    @Column(name = "disease_date", nullable = true)
     @NotNull(message = "Disease date cannot be blank")
     private LocalDate diseaseDate;
 
@@ -40,7 +40,7 @@ public class PatientDisease {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "remarks")
+    @Column(name = "remarks", nullable = true)
     private String remarks;
 
     @ManyToOne(fetch = FetchType.EAGER)
