@@ -37,13 +37,13 @@ public class Patient {
     @NotNull(message = "Date of birth cannot be blank")
     private LocalDate dateOfBirth;
 
-    @Column(name = "height")
+    @Column(name = "height", nullable = true)
     private Float height;
 
-    @Column(name = "weight")
+    @Column(name = "weight", nullable = true)
     private Float weight;
 
-    @Column(name = "remarks")
+    @Column(name = "remarks", nullable = true)
     private String remarks;
 
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
@@ -52,7 +52,7 @@ public class Patient {
 
     // This relationship can be managed based on the bloodType
     // Remove this unless needed for a specific use case
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "blood_type", referencedColumnName = "blood_type", insertable = false, updatable = false)
     private BloodType bloodTypeEntity; // You might want to remove this if not needed
 }

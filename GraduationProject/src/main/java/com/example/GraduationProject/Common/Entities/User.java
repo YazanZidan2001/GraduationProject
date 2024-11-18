@@ -57,7 +57,7 @@ public class User implements UserDetails {
     @Column(name = "isActive")
     @JsonIgnore
     @Builder.Default
-    private boolean isActive = false;
+    private boolean isActive = true;
 
     @Column(name = "isDeleted")
     @JsonIgnore
