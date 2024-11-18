@@ -1,10 +1,5 @@
 package com.example.GraduationProject.Common.Enums;
 
-
-
-
-
-
 public enum BloodTypes {
     A_POSITIVE,
     A_NEGATIVE,

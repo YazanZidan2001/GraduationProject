@@ -25,8 +25,7 @@ public class Patient {
 
     @Column(name = "blood_type", nullable = true)
     @Enumerated(EnumType.STRING)
-//    @NotNull(message = "Blood type cannot be blank")
-    private BloodTypes bloodType;
+    private BloodTypes bloodType; // Using enum directly, no foreign key needed
 
     @Column(name = "gender", nullable = false)
     @NotNull(message = "Gender cannot be blank")
@@ -50,9 +49,7 @@ public class Patient {
     @JoinColumn(name = "patient_id")
     private User user;
 
-    // This relationship can be managed based on the bloodType
-    // Remove this unless needed for a specific use case
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "blood_type", referencedColumnName = "blood_type", insertable = false, updatable = false)
-    private BloodType bloodTypeEntity; // You might want to remove this if not needed
+//    @ManyToOne(fetch = FetchType.EAGER)
+//    @JoinColumn(name = "blood_type", referencedColumnName = "blood_type", insertable = false, updatable = false)
+//    private BloodType bloodTypeEntity;
 }
