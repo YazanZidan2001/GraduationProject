@@ -76,16 +76,40 @@ public class AppointmentController extends SessionManagement {
 
     @GetMapping("/patient/{patientID}")
     public ResponseEntity<PaginationDTO<Appointment>> getAppointmentsByPatientID(
-            @PathVariable Long patientID,
+            @PathVariable String patientID,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) throws UserNotFoundException {
+
+        // Validate the logged-in user
         String token = service.extractToken(request);
         User user = service.extractUserFromToken(token);
         validateLoggedInPatientAndDoctor(user);
+
+        // Fetch appointments for the given patient ID
         PaginationDTO<Appointment> appointments = appointmentService.findByPatientID(patientID, page, size);
         return ResponseEntity.ok(appointments);
     }
+
+    @GetMapping("/searchByPatient")
+    public ResponseEntity<PaginationDTO<Appointment>> searchAppointmentsByPatient(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) throws UserNotFoundException {
+
+        // Validate the logged-in user
+        String token = service.extractToken(request);
+        User user = service.extractUserFromToken(token);
+        validateLoggedInPatientAndDoctor(user);
+
+        // Fetch appointments based on the search criteria
+        PaginationDTO<Appointment> paginationDTO = appointmentService.findByPatientID(search, page, size);
+
+        // Return only the list of appointments
+        return ResponseEntity.ok(paginationDTO);
+    }
+
 
     @GetMapping("/date")
     public ResponseEntity<PaginationDTO<Appointment>> getAppointmentsByDate(

@@ -68,9 +68,9 @@ public class AppointmentService {
     }
 
     @Transactional
-    public PaginationDTO<Appointment> findByPatientID(Long patientID, int page, int size) {
+    public PaginationDTO<Appointment> findByPatientID(String search, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Appointment> appointments = (Page<Appointment>) appointmentRepository.findByPatientID(patientID, pageable);
+        Page<Appointment> appointments = (Page<Appointment>) appointmentRepository.findByPatientFields(pageable, search);
 
         return mapToPaginationDTO(appointments);
     }

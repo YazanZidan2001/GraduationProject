@@ -15,7 +15,13 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
 
     @Query("SELECT p FROM Patient p WHERE " +
             "(:search IS NULL OR :search = '' OR " +
-            "p.user.firstName LIKE %:search% OR p.user.lastName LIKE %:search% OR p.user.phone LIKE %:search%)")
+            "p.user.firstName LIKE %:search% OR " +
+            "p.user.lastName LIKE %:search% OR " +
+            "p.user.phone LIKE %:search% OR " +
+            "p.user.email LIKE %:search% OR " +
+            "CAST(p.patientId AS string) LIKE %:search% OR " +
+            "CAST(p.bloodType AS string) LIKE %:search% OR " +
+            "CAST(p.gender AS string) LIKE %:search%)")
     Page<Patient> findAll(Pageable pageable, @Param("search") String search);
 
     @Query("SELECT p FROM Patient p WHERE p.user.email = :email AND p.user.isDeleted = false")

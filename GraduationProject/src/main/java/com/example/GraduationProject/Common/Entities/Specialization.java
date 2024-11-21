@@ -19,4 +19,8 @@ public class Specialization {
     @Column(name = "special_name", nullable = false)
     @NotNull(message = "special_name cannot be blank")
     private String special_name; // This should match exactly
+
+    public boolean isEmpty() {
+        return this.special_name == null || this.special_name.isEmpty();
+    }
 }

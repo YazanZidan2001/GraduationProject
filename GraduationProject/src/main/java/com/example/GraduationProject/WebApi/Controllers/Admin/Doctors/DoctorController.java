@@ -1,5 +1,6 @@
 package com.example.GraduationProject.WebApi.Controllers.Admin.Doctors;
 
+import com.example.GraduationProject.Core.Repositories.SpecializationRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 public class DoctorController extends SessionManagement {
     private final DoctorService doctorService;
     private final AuthenticationService service;
+    private final SpecializationRepository specializationRepository;  // Add this
+
     @PostMapping("/")
     public ResponseEntity<AuthenticationResponse> addDoctor(
             @RequestBody @Valid Doctor request,
@@ -62,16 +65,27 @@ public class DoctorController extends SessionManagement {
     }
 
     @GetMapping("getAllDoctors-by-specialization")
-    public PaginationDTO<Doctor> getAllDoctors(@RequestParam(defaultValue = "1") int page,
-                                               @RequestParam(defaultValue = "10") int size,
-                                               @RequestParam(defaultValue = "",required = false) String search ,
-                                               @RequestParam(defaultValue = "",required = false) Specialization specialization,
-                                               HttpServletRequest httpServletRequest) throws UserNotFoundException {
+    public PaginationDTO<Doctor> getAllDoctors(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "", required = false) String search,
+            @RequestParam(defaultValue = "", required = false) String specialization,
+            HttpServletRequest httpServletRequest) throws UserNotFoundException {
+
+        if (specialization != null && !specialization.isEmpty()) {
+            boolean isValid = specializationRepository.existsBySpecialName(specialization);
+            if (!isValid) {
+                throw new IllegalArgumentException("Invalid specialization: " + specialization);
+            }
+        }
+
         String token = service.extractToken(httpServletRequest);
         User user = service.extractUserFromToken(token);
         validateLoggedInAdmin(user);
-        return doctorService.getAllDoctors(page, size, search, String.valueOf(specialization));
+
+        return doctorService.getAllDoctors(page, size, search, specialization);
     }
+
 
     @GetMapping("getAllDoctors")
     public PaginationDTO<Doctor> getAllDoctors(@RequestParam(defaultValue = "1") int page,

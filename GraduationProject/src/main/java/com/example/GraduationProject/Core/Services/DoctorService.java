@@ -148,15 +148,20 @@ public class DoctorService {
         if (page < 1) {
             page = 1;
         }
+
+        // Normalize inputs
         if (search != null && search.isEmpty()) {
             search = null;
         }
         if (specialization != null && specialization.isEmpty()) {
             specialization = null;
         }
+
+        // Paginate results
         Pageable pageable = PageRequest.of(page - 1, size);
-        Specialization spec = (specialization != null) ? Specialization.builder().special_name(specialization).build() : null;
         Page<Doctor> doctors = doctorRepository.findAll(pageable, search, specialization);
+
+        // Build and return pagination DTO
         PaginationDTO<Doctor> paginationDTO = new PaginationDTO<>();
         paginationDTO.setTotalElements(doctors.getTotalElements());
         paginationDTO.setTotalPages(doctors.getTotalPages());
@@ -164,6 +169,7 @@ public class DoctorService {
         paginationDTO.setNumber(doctors.getNumber() + 1);
         paginationDTO.setNumberOfElements(doctors.getNumberOfElements());
         paginationDTO.setContent(doctors.getContent());
+
         return paginationDTO;
     }
 

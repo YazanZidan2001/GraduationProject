@@ -5,6 +5,8 @@ import com.example.GraduationProject.Common.CompositeKey.AppointmentCompositeKey
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -19,7 +21,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Appoin
     Page<Appointment> findByDoctorID(Long doctorID, Pageable pageable);
 
     // Find appointments by patient ID
-    Page<Appointment> findByPatientID(Long patientID, Pageable pageable);
+    @Query("SELECT a FROM Appointment a " +
+            "JOIN a.patient p " +
+            "JOIN p.user u " +
+            "WHERE (:search IS NULL OR :search = '' OR " +
+            "u.firstName LIKE %:search% OR " +
+            "u.lastName LIKE %:search% OR " +
+            "u.email LIKE %:search% OR " +
+            "u.phone LIKE %:search% OR " +
+            "CAST(p.patientId AS string) LIKE %:search%)")
+    Page<Appointment> findByPatientFields(Pageable pageable, @Param("search") String search);
+
+
 
     // Find appointments by appointment date
     Page<Appointment> findByAppointmentDate(LocalDate appointmentDate, Pageable pageable);
