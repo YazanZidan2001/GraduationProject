@@ -1,5 +1,7 @@
 package com.example.GraduationProject.WebApi.Controllers.Admin.Doctors;
 
+import com.example.GraduationProject.Common.Entities.Category;
+import com.example.GraduationProject.Core.Repositories.CategoryRepository;
 import com.example.GraduationProject.Core.Repositories.SpecializationRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -7,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.Doctor;
 import com.example.GraduationProject.Common.Entities.User;
-import com.example.GraduationProject.Common.Entities.Specialization;
 import com.example.GraduationProject.Common.Responses.GeneralResponse;
 import com.example.GraduationProject.Core.Services.DoctorService;
 import com.example.GraduationProject.Core.Services.AuthenticationService;
@@ -24,6 +25,7 @@ public class DoctorController extends SessionManagement {
     private final DoctorService doctorService;
     private final AuthenticationService service;
     private final SpecializationRepository specializationRepository;  // Add this
+    private final CategoryRepository categoryRepository;
 
     @PostMapping("/")
     public ResponseEntity<AuthenticationResponse> addDoctor(
@@ -83,7 +85,32 @@ public class DoctorController extends SessionManagement {
         User user = service.extractUserFromToken(token);
         validateLoggedInAdmin(user);
 
-        return doctorService.getAllDoctors(page, size, search, specialization);
+        return doctorService.getAllDoctorsBySpecialization(page, size, search, specialization);
+    }
+
+    @GetMapping("getAllDoctors-by-category")
+    public PaginationDTO<Doctor> getAllDoctorsByCategory(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "", required = false) String search,
+            @RequestParam(defaultValue = "", required = false) String category,
+            HttpServletRequest httpServletRequest) throws UserNotFoundException {
+
+        // Validate the category if provided
+        if (category != null && !category.isEmpty()) {
+            boolean isValid = categoryRepository.existsByCategoryName(category);
+            if (!isValid) {
+                throw new IllegalArgumentException("Invalid category: " + category);
+            }
+        }
+
+        // Extract and validate the logged-in user
+        String token = service.extractToken(httpServletRequest);
+        User user = service.extractUserFromToken(token);
+        validateLoggedInAdmin(user);
+
+        // Call the service method to get doctors filtered by category
+        return doctorService.getAllDoctorsByCategory(page, size, search, category);
     }
 
 
@@ -95,7 +122,7 @@ public class DoctorController extends SessionManagement {
         String token = service.extractToken(httpServletRequest);
         User user = service.extractUserFromToken(token);
         validateLoggedInAdmin(user);
-        return doctorService.getAllDoctors(page, size, search);
+        return doctorService.getAllDoctorsBySpecialization(page, size, search);
     }
 
 

@@ -1,7 +1,6 @@
 package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.Core.Repositories.SpecializationRepository;
-import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
@@ -22,8 +21,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -144,7 +141,7 @@ public class DoctorService {
     }
 
     @Transactional
-    public PaginationDTO<Doctor> getAllDoctors(int page, int size, String search, String specialization) {
+    public PaginationDTO<Doctor> getAllDoctorsBySpecialization(int page, int size, String search, String specialization) {
         if (page < 1) {
             page = 1;
         }
@@ -159,7 +156,7 @@ public class DoctorService {
 
         // Paginate results
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Doctor> doctors = doctorRepository.findAll(pageable, search, specialization);
+        Page<Doctor> doctors = doctorRepository.findAll_bySpecialization(pageable, search, specialization);
 
         // Build and return pagination DTO
         PaginationDTO<Doctor> paginationDTO = new PaginationDTO<>();
@@ -174,7 +171,41 @@ public class DoctorService {
     }
 
     @Transactional
-    public PaginationDTO<Doctor> getAllDoctors(int page, int size, String search) {
+    public PaginationDTO<Doctor> getAllDoctorsByCategory(int page, int size, String search, String category) {
+        // Ensure the page number is at least 1
+        if (page < 1) {
+            page = 1;
+        }
+
+        // Normalize inputs: replace empty strings with null
+        if (search != null && search.isEmpty()) {
+            search = null;
+        }
+        if (category != null && category.isEmpty()) {
+            category = null;
+        }
+
+        // Create pageable object with the given page and size
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        // Query the repository using the provided search and category
+        Page<Doctor> doctors = doctorRepository.findAll_byCategory(pageable, search, category);
+
+        // Build and return a PaginationDTO
+        PaginationDTO<Doctor> paginationDTO = new PaginationDTO<>();
+        paginationDTO.setTotalElements(doctors.getTotalElements());
+        paginationDTO.setTotalPages(doctors.getTotalPages());
+        paginationDTO.setSize(doctors.getSize());
+        paginationDTO.setNumber(doctors.getNumber() + 1); // Adjust for 1-based page indexing
+        paginationDTO.setNumberOfElements(doctors.getNumberOfElements());
+        paginationDTO.setContent(doctors.getContent());
+
+        return paginationDTO;
+    }
+
+
+    @Transactional
+    public PaginationDTO<Doctor> getAllDoctorsBySpecialization(int page, int size, String search) {
         if (page < 1) {
             page = 1;
         }
@@ -183,7 +214,7 @@ public class DoctorService {
         }
 
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Doctor> doctors = doctorRepository.findAll(pageable, search);
+        Page<Doctor> doctors = doctorRepository.findAll_bySpecialization(pageable, search);
         PaginationDTO<Doctor> paginationDTO = new PaginationDTO<>();
         paginationDTO.setTotalElements(doctors.getTotalElements());
         paginationDTO.setTotalPages(doctors.getTotalPages());

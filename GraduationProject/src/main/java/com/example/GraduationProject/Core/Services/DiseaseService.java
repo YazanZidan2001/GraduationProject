@@ -18,14 +18,23 @@ public class DiseaseService {
         return diseaseRepository.save(disease);
     }
 
-    // Update an existing disease by disease name
     public Disease updateDisease(String diseaseName, Disease updatedDisease) {
         return diseaseRepository.findById(diseaseName)
                 .map(existingDisease -> {
+                    // Update disease type
                     existingDisease.setDiseaseType(updatedDisease.getDiseaseType());
+
+                    // Update remarks
                     existingDisease.setRemarks(updatedDisease.getRemarks());
+
+                    // Update category if provided
+                    if (updatedDisease.getCategory() != null) {
+                        existingDisease.setCategory(updatedDisease.getCategory());
+                    }
+
                     return diseaseRepository.save(existingDisease);
-                }).orElseThrow(() -> new RuntimeException("Disease not found"));
+                })
+                .orElseThrow(() -> new RuntimeException("Disease not found"));
     }
 
     // Get a disease by disease name

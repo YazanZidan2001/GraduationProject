@@ -1,5 +1,6 @@
 package com.example.GraduationProject.Core.Services;
 
+import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.*;
 import com.example.GraduationProject.Common.Enums.Role;
 import com.example.GraduationProject.Common.Enums.TokenType;
@@ -195,4 +196,30 @@ public class PatientService {
         });
         tokenRepository.saveAll(validUserTokens);
     }
+
+    @Transactional
+    public PaginationDTO<Patient> getAllPatients(int page, int size, String search) {
+        // Normalize inputs
+        if (search != null && search.isEmpty()) {
+            search = null;
+        }
+
+        // Create a Pageable object
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        // Use the repository method with the search parameter
+        Page<Patient> patientsPage = patientRepository.findAll(pageable, search);
+
+        // Build and return PaginationDTO
+        return PaginationDTO.<Patient>builder()
+                .totalElements(patientsPage.getTotalElements())
+                .totalPages(patientsPage.getTotalPages())
+                .size(patientsPage.getSize())
+                .number(patientsPage.getNumber() + 1) // Convert to 1-based index
+                .numberOfElements(patientsPage.getNumberOfElements())
+                .content(patientsPage.getContent())
+                .build();
+    }
+
+
 }

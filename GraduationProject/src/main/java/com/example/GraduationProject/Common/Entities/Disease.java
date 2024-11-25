@@ -26,7 +26,15 @@ public class Disease {
     @NotNull(message = "Disease type cannot be blank")
     private DiseaseType diseaseType; // Enum for disease type
 
+    // Store categoryName explicitly in the database for ease of use in JSON
+    @Column(name = "category_name", nullable = false)
+    @NotNull(message = "Category name cannot be blank")
+    private String categoryName;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_name", referencedColumnName = "category_name", insertable = false, updatable = false)
+    private Category category; // Links to the Category entity
+
     @Column(name = "remarks")
     private String remarks; // Optional remarks
-
 }
