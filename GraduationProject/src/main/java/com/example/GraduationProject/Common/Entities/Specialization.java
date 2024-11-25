@@ -23,7 +23,7 @@ public class Specialization {
     // Store categoryName explicitly in the database for ease of use in JSON
     @Column(name = "category_name", nullable = false)
     @NotNull(message = "Category name cannot be blank")
-    private String categoryName;
+    private String category_name;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_name", referencedColumnName = "category_name", insertable = false, updatable = false)

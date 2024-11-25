@@ -45,7 +45,7 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
     @Query("SELECT d FROM Doctor d WHERE d.user.isDeleted = false AND " +
             "(:search IS NULL OR :search = '' OR d.user.firstName LIKE %:search% OR d.user.lastName LIKE %:search% OR " +
             "d.user.email LIKE %:search% OR d.user.phone LIKE %:search%) AND " +
-            "(:category IS NULL OR LOWER(d.specialization.category.categoryName) = LOWER(:category))")
+            "(:category IS NULL OR LOWER(d.specialization.category.category_name) = LOWER(:category))")
     Page<Doctor> findAll_byCategory(Pageable pageable, @Param("search") String search, @Param("category") String category);
 
 }

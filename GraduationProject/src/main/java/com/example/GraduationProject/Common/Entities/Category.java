@@ -20,5 +20,5 @@ public class Category {
     @Id
     @Column(name = "category_name", nullable = false)
     @NotNull(message = "category_name cannot be blank")
-    private String categoryName;
+    private String category_name;
 }

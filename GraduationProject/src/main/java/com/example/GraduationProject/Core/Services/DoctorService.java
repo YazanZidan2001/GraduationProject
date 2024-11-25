@@ -40,43 +40,36 @@ public class DoctorService {
         User existingUser = userRepository.findByEmail(user.getEmail()).orElse(null);
 
         if (existingUser != null) {
-            // Check if the existing user already has an associated doctor
             if (existingUser.getDoctor() != null) {
                 throw new UserNotFoundException("User already has an associated doctor");
             } else {
-                // Reuse the existing user
                 user = existingUser;
             }
         } else {
-            // Manually set the UserID from the request (ensure the ID is provided in the JSON)
             user.setUserID(request.getDoctorId());
-
-            // Set role and encode password for the new user
             user.setRole(Role.DOCTOR);
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             user.setActive(true);
-
-            // Save the new user
             user = userRepository.save(user);
         }
 
-        // Fetch the specialization based on the special_name
-        Specialization specialization = specializationRepository.findById(request.getSpecialization().getSpecial_name())
-                .orElseThrow(() -> new RuntimeException("Specialization not found"));
+        // Fetch specialization using the special_name
+        Specialization specialization = specializationRepository.findById(request.getSpecial_name())
+                .orElseThrow(() -> new UserNotFoundException("Specialization not found"));
 
-        // Create a new Doctor instance
+        // Create Doctor object
         Doctor doctor = Doctor.builder()
-                .doctorId(user.getUserID())        // Set doctorId to match UserID
-                .user(user)                        // Associate with the created/reused user
-                .specialization(specialization)    // Use the fetched specialization
+                .doctorId(user.getUserID())
+                .user(user)
+                .specialization(specialization) // Set the fetched specialization
                 .gender(request.getGender())
                 .bio(request.getBio())
                 .build();
 
-        // Save the new doctor
+        // Save Doctor
         doctorRepository.save(doctor);
 
-        // Generate JWT tokens for the user
+        // Generate JWT tokens
         String jwtToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
         saveUserToken(user, jwtToken);
@@ -87,10 +80,6 @@ public class DoctorService {
                 .message("Doctor added successfully")
                 .build();
     }
-
-
-
-
 
 
     @Transactional

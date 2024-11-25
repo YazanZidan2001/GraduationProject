@@ -24,7 +24,7 @@ public class CategoryService {
     public Category updateCategory(String categoryName, Category categoryDetails) {
         Category category = categoryRepository.findById(categoryName)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found with name: " + categoryName));
-        category.setCategoryName(categoryDetails.getCategoryName());
+        category.setCategory_name(categoryDetails.getCategory_name());
         return categoryRepository.save(category);
     }
 

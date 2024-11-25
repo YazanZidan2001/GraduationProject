@@ -30,15 +30,19 @@ public class DoctorController extends SessionManagement {
     public ResponseEntity<AuthenticationResponse> addDoctor(
             @RequestBody @Valid Doctor request,
             HttpServletRequest httpServletRequest) throws Exception {
+           System.out.println("Incoming request: " + request);
 
         // Extract and validate the user from the token
         String token = authenticationService.extractToken(httpServletRequest);
         User user = authenticationService.extractUserFromToken(token);
         validateLoggedInAdmin(user);
 
-        // Check if the specialization is provided
-        if (request.getSpecialization() == null || request.getSpecialization().getSpecial_name() == null) {
+        // Validate mandatory fields
+        if (request.getSpecial_name() == null || request.getSpecial_name().isEmpty()) {
             throw new IllegalArgumentException("Specialization must be provided");
+        }
+        if (request.getGender() == null) {
+            throw new IllegalArgumentException("Gender must be provided");
         }
 
         return ResponseEntity.ok(doctorService.addDoctor(request));
