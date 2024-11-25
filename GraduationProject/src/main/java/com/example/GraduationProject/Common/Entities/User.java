@@ -88,6 +88,10 @@ public class User implements UserDetails {
     @Column(name = "preferred2faMethod", nullable = true)
     private String preferred2faMethod; // "email" or "phone"
 
+    @Column(name = "photo_path", nullable = true)
+    private String photoPath;
+
+
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {

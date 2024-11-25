@@ -1,6 +1,5 @@
 package com.example.GraduationProject.WebApi.Controllers.Admin.Doctors;
 
-import com.example.GraduationProject.Common.Entities.Category;
 import com.example.GraduationProject.Core.Repositories.CategoryRepository;
 import com.example.GraduationProject.Core.Repositories.SpecializationRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class DoctorController extends SessionManagement {
     private final DoctorService doctorService;
-    private final AuthenticationService service;
+    private final AuthenticationService authenticationService;
     private final SpecializationRepository specializationRepository;  // Add this
     private final CategoryRepository categoryRepository;
 
@@ -33,8 +32,8 @@ public class DoctorController extends SessionManagement {
             HttpServletRequest httpServletRequest) throws Exception {
 
         // Extract and validate the user from the token
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInAdmin(user);
 
         // Check if the specialization is provided
@@ -48,8 +47,8 @@ public class DoctorController extends SessionManagement {
 
     @PutMapping ("/{doctorId}")
     public ResponseEntity<GeneralResponse> updateDoctor(@PathVariable Long doctorId,  @RequestBody @Valid Doctor request, HttpServletRequest httpServletRequest) throws UserNotFoundException {
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInAdmin(user);
         doctorService.updateDoctor(request,  doctorId);
         return ResponseEntity.ok(GeneralResponse.builder().message("Doctor updated successfully").build());
@@ -57,8 +56,8 @@ public class DoctorController extends SessionManagement {
 
     @GetMapping("/{email}")
     public ResponseEntity<Doctor> getDoctor(@PathVariable String email, HttpServletRequest httpServletRequest) throws UserNotFoundException {
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInAdmin(user);
 
         Doctor doctor = doctorService.findDoctorByEmail(email);
@@ -81,8 +80,8 @@ public class DoctorController extends SessionManagement {
             }
         }
 
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInAdmin(user);
 
         return doctorService.getAllDoctorsBySpecialization(page, size, search, specialization);
@@ -105,8 +104,8 @@ public class DoctorController extends SessionManagement {
         }
 
         // Extract and validate the logged-in user
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInAdmin(user);
 
         // Call the service method to get doctors filtered by category
@@ -119,8 +118,8 @@ public class DoctorController extends SessionManagement {
                                                @RequestParam(defaultValue = "10") int size,
                                                @RequestParam(defaultValue = "",required = false) String search ,
                                                HttpServletRequest httpServletRequest) throws UserNotFoundException {
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInAdmin(user);
         return doctorService.getAllDoctorsBySpecialization(page, size, search);
     }

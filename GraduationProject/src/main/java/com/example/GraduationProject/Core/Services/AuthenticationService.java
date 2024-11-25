@@ -1,6 +1,7 @@
 package com.example.GraduationProject.Core.Services;
 
-
+import com.example.GraduationProject.SessionManagement;
+import org.springframework.web.multipart.MultipartFile;
 import com.example.GraduationProject.Common.DTOs.LoginDTO;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.Email;
@@ -29,14 +30,15 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.io.File;
+import java.io.IOException;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService {
+public class AuthenticationService extends SessionManagement {
     private final UserRepository repository;
     private final TokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
@@ -44,6 +46,39 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final EmailRepository emailRepository;
+
+
+    @Transactional
+    public GeneralResponse uploadPhoto(String token, MultipartFile file) throws UserNotFoundException, IOException {
+        // Extract user from token
+        User user = extractUserFromToken(token);
+        validateLoggedInAllUser(user); // Validate user's role
+
+        // Define the folder path
+        String folderPath = "user-photos/";
+        File folder = new File(folderPath);
+
+        // Create the folder if it doesn't exist
+        if (!folder.exists() && !folder.mkdirs()) {
+            throw new IOException("Failed to create directory for photos.");
+        }
+
+        // Generate a unique file name
+        String fileName = "user_" + user.getUserID() + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        File photoFile = new File(folderPath + fileName);
+
+        // Save the file locally
+        file.transferTo(photoFile);
+
+        // Update the user's photo path
+        user.setPhotoPath("/photos/" + fileName); // Accessible via the endpoint
+        repository.save(user);
+
+        return GeneralResponse.builder()
+                .message("Photo uploaded successfully")
+                .build();
+    }
+
 
 
 

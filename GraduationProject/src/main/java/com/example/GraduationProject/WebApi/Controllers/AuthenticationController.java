@@ -1,6 +1,7 @@
 package com.example.GraduationProject.WebApi.Controllers;
 
 
+import org.springframework.web.multipart.MultipartFile;
 import com.example.GraduationProject.Core.Services.PatientService;
 import com.example.GraduationProject.Core.Services.VerificationService;
 import com.example.GraduationProject.WebApi.config.JwtService;
@@ -8,7 +9,6 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import com.example.GraduationProject.Common.Enums.Role;
 import lombok.RequiredArgsConstructor;
 import com.example.GraduationProject.Common.DTOs.LoginDTO;
 import com.example.GraduationProject.Common.Entities.Patient;
@@ -30,12 +30,23 @@ import java.io.IOException;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthenticationController extends SessionManagement {
-    private final AuthenticationService service;
+    private final AuthenticationService authenticationService;
     private final PatientService patientService;
     private final LogoutService logoutService;
     private final VerificationService verificationService;
-
     private final JwtService jwtService;
+
+
+    @PostMapping("/upload-photo")
+    public ResponseEntity<GeneralResponse> uploadPhoto(
+            @RequestParam("photo") MultipartFile file,
+            HttpServletRequest request) throws UserNotFoundException, IOException {
+        // Extract token and call the service
+        String token = authenticationService.extractToken(request);
+        GeneralResponse response = authenticationService.uploadPhoto(token, file);
+        return ResponseEntity.ok(response);
+    }
+
 
     @GetMapping("/extract-user-id")
     public ResponseEntity<Long> extractUserIdFromToken(HttpServletRequest request) throws UserNotFoundException {
@@ -47,21 +58,21 @@ public class AuthenticationController extends SessionManagement {
         String token = authHeader.substring(7); // Remove "Bearer " prefix
 
         // Use the service method to extract the userId
-        Long userId = service.getUserIdByToken(token);
+        Long userId = authenticationService.getUserIdByToken(token);
 
         return ResponseEntity.ok(userId);
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> Login(@RequestBody @Valid LoginDTO request) throws UserNotFoundException {
-        return ResponseEntity.ok(service.authenticate(request));
+        return ResponseEntity.ok(authenticationService.authenticate(request));
     }
 
     @PostMapping("/login-doctor")
     public ResponseEntity<GeneralResponse> login(@RequestBody @Valid LoginDTO request) throws UserNotFoundException {
         // Authenticate the user by contact info (email or phone) and password
-        User user = service.getUserByContactInfo(request.getContactInfo()); // Checks if contactInfo is email or phone
-        service.authenticateUserPassword(user, request.getPassword()); // Separate method to verify password
+        User user = authenticationService.getUserByContactInfo(request.getContactInfo()); // Checks if contactInfo is email or phone
+        authenticationService.authenticateUserPassword(user, request.getPassword()); // Separate method to verify password
 
         // Prompt for verification method selection
         return ResponseEntity.ok(new GeneralResponse(
@@ -77,11 +88,11 @@ public class AuthenticationController extends SessionManagement {
             @RequestParam String method // "email" or "phone"
     ) throws UserNotFoundException, IOException {
         // Retrieve the user by contact info (either email or phone)
-        User user = service.getUserByContactInfo(contactInfo);
+        User user = authenticationService.getUserByContactInfo(contactInfo);
 
         // Set the preferred verification method and save it to the database
         user.setPreferred2faMethod(method);
-        service.updateUser(user);
+        authenticationService.updateUser(user);
 
         // Send the verification code based on the chosen method
         verificationService.sendVerificationCode(user);
@@ -93,11 +104,11 @@ public class AuthenticationController extends SessionManagement {
             HttpServletRequest request,
             HttpServletResponse response
     ) throws IOException {
-        service.refreshToken(request, response);
+        authenticationService.refreshToken(request, response);
     }
     @PostMapping("/send-verification-code-to-resetPassword")
     public ResponseEntity<String> sendPasswordResetEmail(@RequestParam String email) throws UserNotFoundException, MessagingException, MessagingException {
-        service.sendPasswordResetEmail(email);
+        authenticationService.sendPasswordResetEmail(email);
         return ResponseEntity.ok("Verification code sent to email");
     }
 
@@ -106,7 +117,7 @@ public class AuthenticationController extends SessionManagement {
                                                                       @RequestParam String verificationCode,
                                                                       @RequestBody String newPassword
     ) throws UserNotFoundException {
-        GeneralResponse response = service.verifyCodeAndResetPassword(
+        GeneralResponse response = authenticationService.verifyCodeAndResetPassword(
                 email, verificationCode, newPassword);
         return ResponseEntity.ok(response);
     }
@@ -118,7 +129,7 @@ public class AuthenticationController extends SessionManagement {
     @GetMapping("/getUser")
     public User getUser(@RequestHeader("Authorization") String request) {
         String token = request.replace("Bearer ", "");
-        return service.extractUserFromToken(token);
+        return authenticationService.extractUserFromToken(token);
     }
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
@@ -128,17 +139,17 @@ public class AuthenticationController extends SessionManagement {
     @PostMapping("/expire-token/{id}")
     public boolean expireToken(@PathVariable Long id,@RequestParam String token)  {
 
-        return service.expiredToken(id,token);
+        return authenticationService.expiredToken(id,token);
     }
     @PostMapping("/changePassword")
     public ResponseEntity<AuthenticationResponse> changePassword(@RequestParam String email,
                                                                  @RequestParam String oldPassword,
                                                                  @RequestParam String newPassword,
                                                                  HttpServletRequest httpServletRequest) throws UserNotFoundException {
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInAllUser(user);
-        AuthenticationResponse response = service.ChangePassword(email, oldPassword, newPassword);
+        AuthenticationResponse response = authenticationService.ChangePassword(email, oldPassword, newPassword);
         return ResponseEntity.ok(response);
     }
 
@@ -151,7 +162,7 @@ public class AuthenticationController extends SessionManagement {
             @RequestParam String method // "email" or "phone"
     ) throws UserNotFoundException, IOException {
         // Retrieve the user by contact info (either email or phone)
-        User user = service.getUserByContactInfo(contactInfo);
+        User user = authenticationService.getUserByContactInfo(contactInfo);
 
         // Set the user's preferred method for sending the verification code
         user.setPreferred2faMethod(method);
@@ -168,7 +179,7 @@ public class AuthenticationController extends SessionManagement {
             @RequestParam String code
     ) throws UserNotFoundException {
         // Retrieve the user by contact info (either email or phone)
-        User user = service.getUserByContactInfo(contactInfo);
+        User user = authenticationService.getUserByContactInfo(contactInfo);
 
         // Verify the provided code using the VerificationService
         boolean isCodeValid = verificationService.verifyCode(user, code);
@@ -177,8 +188,8 @@ public class AuthenticationController extends SessionManagement {
             // Code is valid, generate access and refresh tokens
             var jwtToken = jwtService.generateToken(user);
             var refreshToken = jwtService.generateRefreshToken(user);
-            service.revokeAllUserTokens(user);
-            service.saveUserToken(user, jwtToken);
+            authenticationService.revokeAllUserTokens(user);
+            authenticationService.saveUserToken(user, jwtToken);
 
             return ResponseEntity.ok(AuthenticationResponse.builder()
                     .accessToken(jwtToken)
