@@ -112,6 +112,27 @@ public class PatientAuthenticationController extends SessionManagement {
         return doctorService.getAllDoctorsByCategory(page, size, search, category);
     }
 
+    @GetMapping("getDoctors-by-patient-diseases")
+    public PaginationDTO<Doctor> getDoctorsByPatientDiseases(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "", required = false) String search,
+            HttpServletRequest httpServletRequest) throws UserNotFoundException {
+
+        // Extract and validate the logged-in user
+        String token = service.extractToken(httpServletRequest);
+        User user = service.extractUserFromToken(token);
+        validateLoggedInPatient(user);
+
+
+        // Get the patient's ID
+        Long patientId = user.getPatient().getPatientId();
+
+        // Call the service method to get doctors filtered by patient diseases
+        return doctorService.getDoctorsByPatientDiseases(page, size, patientId, search);
+    }
+
+
 
     @GetMapping("getAllDoctors")
     public PaginationDTO<Doctor> getAllDoctors(@RequestParam(defaultValue = "1") int page,

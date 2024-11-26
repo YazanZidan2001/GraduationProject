@@ -192,6 +192,37 @@ public class DoctorService {
         return paginationDTO;
     }
 
+    @Transactional
+    public PaginationDTO<Doctor> getDoctorsByPatientDiseases(int page, int size, Long patientId, String search) {
+        // Ensure the page number is at least 1
+        if (page < 1) {
+            page = 1;
+        }
+
+        // Normalize inputs: replace empty strings with null
+        if (search != null && search.isEmpty()) {
+            search = null;
+        }
+
+        // Create pageable object with the given page and size
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        // Query the repository using the provided search and patient ID
+        Page<Doctor> doctors = doctorRepository.findDoctorsByPatientIdAndDiseases(pageable, patientId);
+
+        // Build and return a PaginationDTO
+        PaginationDTO<Doctor> paginationDTO = new PaginationDTO<>();
+        paginationDTO.setTotalElements(doctors.getTotalElements());
+        paginationDTO.setTotalPages(doctors.getTotalPages());
+        paginationDTO.setSize(doctors.getSize());
+        paginationDTO.setNumber(doctors.getNumber() + 1); // Adjust for 1-based page indexing
+        paginationDTO.setNumberOfElements(doctors.getNumberOfElements());
+        paginationDTO.setContent(doctors.getContent());
+
+        return paginationDTO;
+    }
+
+
 
     @Transactional
     public PaginationDTO<Doctor> getAllDoctorsBySpecialization(int page, int size, String search) {

@@ -48,4 +48,15 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
             "(:category IS NULL OR LOWER(d.specialization.category.category_name) = LOWER(:category))")
     Page<Doctor> findAll_byCategory(Pageable pageable, @Param("search") String search, @Param("category") String category);
 
+    @Query("SELECT d FROM Doctor d " +
+            "JOIN d.specialization s " +
+            "JOIN s.category c " +
+            "WHERE d.user.isDeleted = false AND " +
+            "EXISTS (SELECT pd FROM PatientDisease pd " +
+            "        JOIN pd.disease ds " +
+            "        JOIN ds.category cat " +
+            "        WHERE pd.patient.patientId = :patientId " +
+            "        AND cat.category_name = c.category_name)")
+    Page<Doctor> findDoctorsByPatientIdAndDiseases(Pageable pageable, @Param("patientId") Long patientId);
+
 }
