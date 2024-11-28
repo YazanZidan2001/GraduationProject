@@ -85,6 +85,7 @@ public class AppointmentController extends SessionManagement {
         String token = service.extractToken(request);
         User user = service.extractUserFromToken(token);
         validateLoggedInPatientAndDoctor(user);
+        Long patientId = user.getPatient().getPatientId();
 
         // Fetch appointments for the given patient ID
         PaginationDTO<Appointment> appointments = appointmentService.findByPatientID(patientID, page, size);
