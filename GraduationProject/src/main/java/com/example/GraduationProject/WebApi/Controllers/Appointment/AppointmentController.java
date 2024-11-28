@@ -21,12 +21,12 @@ import java.time.LocalDate;
 public class AppointmentController extends SessionManagement {
 
     private final AppointmentService appointmentService;
-    private final AuthenticationService service;
+    private final AuthenticationService authenticationService;
 
     @PostMapping
     public ResponseEntity<String> addAppointment(@RequestBody Appointment appointment, HttpServletRequest request) throws UserNotFoundException, NotFoundException {
-        String token = service.extractToken(request);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
         appointmentService.addAppointment(appointment);
         return ResponseEntity.ok("Appointment added successfully");
@@ -40,8 +40,8 @@ public class AppointmentController extends SessionManagement {
             @PathVariable Long patientID,
             @PathVariable Long clinicID,
             HttpServletRequest request) throws NotFoundException, UserNotFoundException {
-        String token = service.extractToken(request);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
         appointmentService.updateAppointment(appointment, appointmentID, doctorID, patientID, clinicID);
         return ResponseEntity.ok("Appointment updated successfully");
@@ -54,8 +54,8 @@ public class AppointmentController extends SessionManagement {
             @PathVariable Long patientID,
             @PathVariable Long clinicID,
             HttpServletRequest request) throws NotFoundException, UserNotFoundException {
-        String token = service.extractToken(request);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatientAndDoctor(user);
         Appointment appointment = appointmentService.findAppointment(appointmentID, doctorID, patientID, clinicID);
         return ResponseEntity.ok(appointment);
@@ -67,8 +67,8 @@ public class AppointmentController extends SessionManagement {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) throws UserNotFoundException {
-        String token = service.extractToken(request);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
         PaginationDTO<Appointment> appointments = appointmentService.findByDoctorID(doctorID, page, size);
         return ResponseEntity.ok(appointments);
@@ -82,15 +82,35 @@ public class AppointmentController extends SessionManagement {
             HttpServletRequest request) throws UserNotFoundException {
 
         // Validate the logged-in user
-        String token = service.extractToken(request);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatientAndDoctor(user);
-        Long patientId = user.getPatient().getPatientId();
 
         // Fetch appointments for the given patient ID
         PaginationDTO<Appointment> appointments = appointmentService.findByPatientID(patientID, page, size);
         return ResponseEntity.ok(appointments);
     }
+
+    /**
+     * Get appointments for the logged-in patient.
+     */
+    @GetMapping("/patient/myAppointments")
+    public ResponseEntity<PaginationDTO<Appointment>> getAppointmentsForLoggedInPatient(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) throws UserNotFoundException {
+        // Extract the token and validate the user
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInPatient(user);
+
+        // Get the patient ID and fetch appointments
+        Long patientID = user.getPatient().getPatientId();
+        PaginationDTO<Appointment> appointments = appointmentService.findAppointmentsForLoggedInPatient(patientID, page, size);
+
+        return ResponseEntity.ok(appointments);
+    }
+
 
     @GetMapping("/searchByPatient")
     public ResponseEntity<PaginationDTO<Appointment>> searchAppointmentsByPatient(
@@ -100,8 +120,8 @@ public class AppointmentController extends SessionManagement {
             HttpServletRequest request) throws UserNotFoundException {
 
         // Validate the logged-in user
-        String token = service.extractToken(request);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatientAndDoctor(user);
 
         // Fetch appointments based on the search criteria
@@ -118,8 +138,8 @@ public class AppointmentController extends SessionManagement {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) throws UserNotFoundException {
-        String token = service.extractToken(request);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatientAndDoctor(user);
         PaginationDTO<Appointment> appointments = appointmentService.findByAppointmentDate(date, page, size);
         return ResponseEntity.ok(appointments);
@@ -131,8 +151,8 @@ public class AppointmentController extends SessionManagement {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) throws UserNotFoundException {
-        String token = service.extractToken(request);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
         PaginationDTO<Appointment> appointments = appointmentService.findByClinicID(clinicID, page, size);
         return ResponseEntity.ok(appointments);
@@ -144,8 +164,8 @@ public class AppointmentController extends SessionManagement {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) throws UserNotFoundException {
-        String token = service.extractToken(request);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatientAndDoctor(user);
         PaginationDTO<Appointment> appointments = appointmentService.findByAppointmentID(appointmentID, page, size);
         return ResponseEntity.ok(appointments);

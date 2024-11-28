@@ -32,6 +32,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Appoin
             "CAST(p.patientId AS string) LIKE %:search%)")
     Page<Appointment> findByPatientFields(Pageable pageable, @Param("search") String search);
 
+    Page<Appointment> findByPatient_PatientId(Long patientId, Pageable pageable);
+
+
 
 
     // Find appointments by appointment date

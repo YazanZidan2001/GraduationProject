@@ -2,9 +2,11 @@ package com.example.GraduationProject.WebApi.Controllers.Patient.PatientAuth;
 
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.Doctor;
+import com.example.GraduationProject.Common.Entities.DoctorRating;
 import com.example.GraduationProject.Core.Repositories.CategoryRepository;
 import com.example.GraduationProject.Core.Repositories.SpecializationRepository;
 import com.example.GraduationProject.Core.Services.DoctorService;
+import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -16,9 +18,10 @@ import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.Core.Services.PatientService;
 import com.example.GraduationProject.SessionManagement;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -26,15 +29,50 @@ import org.springframework.web.bind.annotation.*;
 public class PatientAuthenticationController extends SessionManagement {
 
     private final PatientService patientService;
-    private final AuthenticationService service;
+    private final AuthenticationService authenticationService;
     private final DoctorService doctorService;
     private final SpecializationRepository specializationRepository;
     private final CategoryRepository categoryRepository;
 
+    @PostMapping("/rating/{doctorId}")
+    public ResponseEntity<GeneralResponse> addRating(
+            @PathVariable Long doctorId,
+            @RequestParam Integer ratingValue,
+            @RequestParam(required = false) String comments,
+            HttpServletRequest httpServletRequest)  {
+
+        try {
+            // Extract patient from token
+            String token = authenticationService.extractToken(httpServletRequest);
+            User user = authenticationService.extractUserFromToken(token);
+            validateLoggedInPatient(user);
+            User patient = authenticationService.extractUserFromToken(token);
+
+            // Call service to add the rating
+            patientService.addRating(doctorId, ratingValue, comments, patient);
+
+            // Return success response
+            return ResponseEntity.ok(GeneralResponse.builder()
+                    .message("Rating added successfully.")
+                    .success(true)
+                    .build());
+        } catch (IllegalArgumentException e) {
+            // Handle validation error
+            return ResponseEntity.badRequest().body(GeneralResponse.builder()
+                    .message("Failed to add rating.")
+                    .success(false)
+                    .errors(List.of(e.getMessage()))
+                    .build());
+        } catch (NotFoundException | UserNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     @PutMapping("/{email}")
     public ResponseEntity<?> updatePatient(@RequestBody @Valid Patient request, @PathVariable String email, HttpServletRequest httpServletRequest) throws UserNotFoundException {
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatient(user);
         GeneralResponse d= patientService.updatePatient(request, email);
         return ResponseEntity.ok(d);
@@ -46,18 +84,18 @@ public class PatientAuthenticationController extends SessionManagement {
                                                                  @RequestParam String oldPassword,
                                                                  @RequestParam String newPassword,
                                                                  HttpServletRequest httpServletRequest) throws UserNotFoundException {
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatient(user);
-        AuthenticationResponse response = service.ChangePassword(email, oldPassword, newPassword);
+        AuthenticationResponse response = authenticationService.ChangePassword(email, oldPassword, newPassword);
         return ResponseEntity.ok(response);
     }
 
 
     @GetMapping("/{email}")
     public ResponseEntity<Doctor> getDoctor(@PathVariable String email, HttpServletRequest httpServletRequest) throws UserNotFoundException {
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInAdmin(user);
 
         Doctor doctor = doctorService.findDoctorByEmail(email);
@@ -80,8 +118,8 @@ public class PatientAuthenticationController extends SessionManagement {
             }
         }
 
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatient(user);
 
         return doctorService.getAllDoctorsBySpecialization(page, size, search, specialization);
@@ -104,8 +142,8 @@ public class PatientAuthenticationController extends SessionManagement {
         }
 
         // Extract and validate the logged-in user
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatient(user);
 
         // Call the service method to get doctors filtered by category
@@ -120,8 +158,8 @@ public class PatientAuthenticationController extends SessionManagement {
             HttpServletRequest httpServletRequest) throws UserNotFoundException {
 
         // Extract and validate the logged-in user
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatient(user);
 
 
@@ -139,8 +177,8 @@ public class PatientAuthenticationController extends SessionManagement {
                                                @RequestParam(defaultValue = "10") int size,
                                                @RequestParam(defaultValue = "",required = false) String search ,
                                                HttpServletRequest httpServletRequest) throws UserNotFoundException {
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatient(user);
         return doctorService.getAllDoctorsBySpecialization(page, size, search);
     }

@@ -1,6 +1,7 @@
 package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.SessionManagement;
+import org.springframework.core.io.UrlResource;
 import org.springframework.web.multipart.MultipartFile;
 import com.example.GraduationProject.Common.DTOs.LoginDTO;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
@@ -31,10 +32,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.UUID;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 
 @Service
 @RequiredArgsConstructor
@@ -58,26 +69,51 @@ public class AuthenticationService extends SessionManagement {
         String folderPath = "user-photos/";
         File folder = new File(folderPath);
 
-        // Create the folder if it doesn't exist
+        // Ensure the folder exists
         if (!folder.exists() && !folder.mkdirs()) {
             throw new IOException("Failed to create directory for photos.");
         }
 
+        // Validate file format
+        String fileExtension = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1).toLowerCase();
+        if (!List.of("jpg", "jpeg", "png").contains(fileExtension)) {
+            throw new IllegalArgumentException("Invalid file type. Only JPG, JPEG, and PNG are allowed.");
+        }
+
         // Generate a unique file name
-        String fileName = "user_" + user.getUserID() + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        String fileName = "user_" + user.getUserID() + "_" + System.currentTimeMillis() + "." + fileExtension;
         File photoFile = new File(folderPath + fileName);
 
         // Save the file locally
         file.transferTo(photoFile);
 
-        // Update the user's photo path
-        user.setPhotoPath("/photos/" + fileName); // Accessible via the endpoint
+        // Update the user's photo path in the database
+        user.setPhotoPath(folderPath + fileName);
         repository.save(user);
 
         return GeneralResponse.builder()
                 .message("Photo uploaded successfully")
                 .build();
     }
+
+
+    @Transactional
+    public Resource getPhotoForUser(User user) throws IOException {
+        // Retrieve the photo path from the user entity
+        String photoPath = user.getPhotoPath();
+        if (photoPath == null || photoPath.isEmpty()) {
+            throw new FileNotFoundException("No photo found for the user.");
+        }
+
+        // Load the photo as a resource
+        File photoFile = new File(photoPath);
+        if (!photoFile.exists()) {
+            throw new FileNotFoundException("Photo file not found at path: " + photoPath);
+        }
+
+        return new UrlResource(photoFile.toURI());
+    }
+
 
 
 

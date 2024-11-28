@@ -22,6 +22,24 @@ public class DoctorAuthenticationController extends SessionManagement {
     private final DoctorService doctorService;
     private final AuthenticationService authenticationService;
 
+
+    /**
+     * Get the average rating for a specific doctor.
+     * @param doctorId The ID of the doctor.
+     * @return The average rating as a plain double.
+     */
+    @GetMapping("/average/{doctorId}")
+    public ResponseEntity<Double> getAverageRating(@PathVariable Long doctorId, HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        // Call the service to calculate the average rating
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInAllUser(user);
+        double avgRating = doctorService.getAverageRating(doctorId);
+
+        // Return the average rating as a plain response
+        return ResponseEntity.ok(avgRating);
+    }
+
     @PutMapping("/{email}")
     public ResponseEntity<GeneralResponse> updateDoctor(@RequestBody @Valid Doctor request, @PathVariable String email, HttpServletRequest httpServletRequest) throws UserNotFoundException {
         String token = authenticationService.extractToken(httpServletRequest);

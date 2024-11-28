@@ -1,7 +1,6 @@
 package com.example.GraduationProject.Core.Services;
 
-import com.example.GraduationProject.Core.Repositories.SpecializationRepository;
-import jakarta.transaction.Transactional;
+import com.example.GraduationProject.Core.Repositories.*;
 import lombok.RequiredArgsConstructor;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.Doctor;
@@ -10,9 +9,6 @@ import com.example.GraduationProject.Common.Entities.User;
 import com.example.GraduationProject.Common.Entities.Token;
 import com.example.GraduationProject.Common.Enums.Role;
 import com.example.GraduationProject.Common.Enums.TokenType;
-import com.example.GraduationProject.Core.Repositories.DoctorRepository;
-import com.example.GraduationProject.Core.Repositories.UserRepository;
-import com.example.GraduationProject.Core.Repositories.TokenRepository;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import com.example.GraduationProject.WebApi.config.JwtService;
 import com.example.GraduationProject.Common.Responses.AuthenticationResponse;
@@ -21,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +28,19 @@ public class DoctorService {
     private final JwtService jwtService;
     private final DoctorRepository doctorRepository;
     private final SpecializationRepository specializationRepository;  // Add this
+    private final DoctorRatingRepository doctorRatingRepository;
+
+    /**
+     * Calculate and return the average rating for a specific doctor.
+     *
+     * @param doctorId The ID of the doctor.
+     * @return The average rating or 0.0 if there are no ratings.
+     */
+    @Transactional(readOnly = true) // Ensure correct import
+    public double getAverageRating(Long doctorId) {
+        Double avgRating = doctorRatingRepository.calculateAverageRating(doctorId);
+        return avgRating != null ? avgRating : 0.0;
+    }
 
     @Transactional
     public AuthenticationResponse addDoctor(Doctor request) throws UserNotFoundException {

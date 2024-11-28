@@ -7,6 +7,7 @@ import com.example.GraduationProject.Common.Enums.TokenType;
 import com.example.GraduationProject.Common.Responses.AuthenticationResponse;
 import com.example.GraduationProject.Common.Responses.GeneralResponse;
 import com.example.GraduationProject.Core.Repositories.*;
+import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import com.example.GraduationProject.WebApi.config.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +35,26 @@ public class PatientService {
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
     private final BloodTypeRepository bloodTypeRepository;
+    private final DoctorRatingRepository doctorRatingRepository;
+
+
+    @Transactional
+    public DoctorRating addRating(Long doctorId, Integer ratingValue, String comments, User patient) throws NotFoundException {
+        if (ratingValue < 1 || ratingValue > 5) {
+            throw new IllegalArgumentException("Rating value must be between 1 and 5.");
+        }
+
+        // Build and save the rating
+        DoctorRating rating = DoctorRating.builder()
+                .doctorId(doctorId)
+                .patientId(patient.getUserID())
+                .ratingValue(ratingValue)
+                .comments(comments)
+                .build();
+
+        return doctorRatingRepository.save(rating);
+    }
+
 
     @Transactional
     public AuthenticationResponse addPatient(Patient request) throws UserNotFoundException {

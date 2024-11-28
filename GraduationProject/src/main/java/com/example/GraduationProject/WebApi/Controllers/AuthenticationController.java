@@ -1,6 +1,8 @@
 package com.example.GraduationProject.WebApi.Controllers;
 
 
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import com.example.GraduationProject.Core.Services.PatientService;
 import com.example.GraduationProject.Core.Services.VerificationService;
@@ -46,6 +48,23 @@ public class AuthenticationController extends SessionManagement {
         GeneralResponse response = authenticationService.uploadPhoto(token, file);
         return ResponseEntity.ok(response);
     }
+
+
+    @GetMapping("/my-photo")
+    public ResponseEntity<Resource> getPhotoForLoggedInUser(HttpServletRequest request) throws UserNotFoundException, IOException {
+        // Extract token and user
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+
+        // Call service to retrieve the photo
+        Resource photo = authenticationService.getPhotoForUser(user);
+
+        // Return the photo as a response
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(photo);
+    }
+
 
 
     @GetMapping("/extract-user-id")
