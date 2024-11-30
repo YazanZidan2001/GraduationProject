@@ -54,7 +54,7 @@ public class SpecializationController extends SessionManagement {
     public List<Specialization> getAllSpecializations(HttpServletRequest httpServletRequest) throws UserNotFoundException {
         String token = service.extractToken(httpServletRequest);
         User user = service.extractUserFromToken(token);
-        validateLoggedInAdmin(user);
+        validateLoggedInAllUser(user);
         return specializationService.getAllSpecializations();
     }
 }
