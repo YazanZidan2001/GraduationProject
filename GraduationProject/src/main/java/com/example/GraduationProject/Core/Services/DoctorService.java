@@ -140,6 +140,13 @@ public class DoctorService {
     }
 
     @Transactional
+    public Doctor findByUserID(long UserID) throws UserNotFoundException {
+        Doctor doctor = doctorRepository.findByUserID(UserID)
+                .orElseThrow(() -> new UserNotFoundException("Doctor not found with UserID: " + UserID));
+        return doctor;
+    }
+
+    @Transactional
     public PaginationDTO<Doctor> getAllDoctorsBySpecialization(int page, int size, String search, String specialization) {
         if (page < 1) {
             page = 1;

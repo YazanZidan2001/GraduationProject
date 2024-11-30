@@ -127,12 +127,25 @@ public class PatientAuthenticationController extends SessionManagement {
     public ResponseEntity<Doctor> getDoctor(@PathVariable String email, HttpServletRequest httpServletRequest) throws UserNotFoundException {
         String token = authenticationService.extractToken(httpServletRequest);
         User user = authenticationService.extractUserFromToken(token);
-        validateLoggedInAdmin(user);
+        validateLoggedInAllUser(user);
 
         Doctor doctor = doctorService.findDoctorByEmail(email);
         // System.out.println(doctor);
         return ResponseEntity.ok(doctor);
     }
+
+
+    @GetMapping("/{UserID}")
+    public ResponseEntity<Doctor> getDoctor(@PathVariable long UserID, HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInAllUser(user);
+
+        Doctor doctor = doctorService.findByUserID(UserID);
+        // System.out.println(doctor);
+        return ResponseEntity.ok(doctor);
+    }
+
 
     @GetMapping("getAllDoctors-by-specialization")
     public PaginationDTO<Doctor> getAllDoctors(

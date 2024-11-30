@@ -17,6 +17,11 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
     @Query("SELECT d FROM Doctor d WHERE d.user.email = :email AND d.user.isDeleted = false")
     Optional<Doctor> findByUserEmail(@Param("email") String email);
 
+    // Find doctor by user's email (if not deleted)
+    @Query("SELECT d FROM Doctor d WHERE d.user.UserID = :UserID AND d.user.isDeleted = false")
+    Optional<Doctor> findByUserID(@Param("email") long UserID);
+
+
     // Find doctor by doctor ID (if user is not deleted)
     @Query("SELECT d FROM Doctor d WHERE d.doctorId = :id AND d.user.isDeleted = false")
     Optional<Doctor> findById(@Param("id") Long id);
