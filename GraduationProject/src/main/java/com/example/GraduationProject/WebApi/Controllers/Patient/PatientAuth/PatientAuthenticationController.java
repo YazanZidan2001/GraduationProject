@@ -1,17 +1,15 @@
 package com.example.GraduationProject.WebApi.Controllers.Patient.PatientAuth;
 
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
-import com.example.GraduationProject.Common.Entities.Doctor;
-import com.example.GraduationProject.Common.Entities.DoctorRating;
+import com.example.GraduationProject.Common.Entities.*;
 import com.example.GraduationProject.Core.Repositories.CategoryRepository;
 import com.example.GraduationProject.Core.Repositories.SpecializationRepository;
 import com.example.GraduationProject.Core.Services.DoctorService;
+import com.example.GraduationProject.Core.Services.PatientLikeDoctorService;
 import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import com.example.GraduationProject.Common.Entities.Patient;
-import com.example.GraduationProject.Common.Entities.User;
 import com.example.GraduationProject.Common.Responses.AuthenticationResponse;
 import com.example.GraduationProject.Common.Responses.GeneralResponse;
 import com.example.GraduationProject.Core.Services.AuthenticationService;
@@ -33,6 +31,7 @@ public class PatientAuthenticationController extends SessionManagement {
     private final DoctorService doctorService;
     private final SpecializationRepository specializationRepository;
     private final CategoryRepository categoryRepository;
+    private final PatientLikeDoctorService patientLikeDoctorService;
 
     @PostMapping("/rating/{doctorId}")
     public ResponseEntity<GeneralResponse> addRating(
@@ -66,6 +65,38 @@ public class PatientAuthenticationController extends SessionManagement {
         } catch (NotFoundException | UserNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    @PostMapping("/liked_doctor/{doctorId}")
+    public ResponseEntity<GeneralResponse> likeDoctor(@PathVariable Long doctorId,
+                                                      @RequestParam boolean isLike,
+                                                      HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        // Extract patient from token
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInPatient(user);
+
+        // Use the patient's ID to like/dislike a doctor
+        Long patientId = user.getUserID();
+        patientLikeDoctorService.likeDoctor(patientId, doctorId, isLike);
+
+        String message = isLike ? "Doctor liked successfully" : "Doctor disliked successfully";
+        return ResponseEntity.ok(GeneralResponse.builder().message(message).build());
+    }
+
+    @GetMapping("/liked_doctors")
+    public ResponseEntity<List<patientLikeDoctor>> getLikedDoctors(HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        // Extract patient from token
+        String token = authenticationService.extractToken(httpServletRequest);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInPatient(user);
+
+        // Use the patient's ID to fetch liked doctors
+        Long patientId = user.getUserID();
+        List<patientLikeDoctor> likedDoctors = patientLikeDoctorService.getAllLikedDoctorsByPatientId(patientId);
+
+        return ResponseEntity.ok(likedDoctors);
     }
 
 
