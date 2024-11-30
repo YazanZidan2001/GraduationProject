@@ -1,25 +1,36 @@
 package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.Common.CompositeKey.DoctorClinicId;
+import com.example.GraduationProject.Core.Repositories.ClinicRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.DoctorClinic;
 import com.example.GraduationProject.Core.Repositories.DoctorClinicRepository;
 import com.example.GraduationProject.WebApi.Exceptions.DoctorClinicNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class DoctorClinicService {
+
+    @Autowired
     private final DoctorClinicRepository doctorClinicRepository;
 
     @Transactional
     public void addDoctorClinic(DoctorClinic doctorClinic) {
         doctorClinicRepository.save(doctorClinic);
+    }
+
+
+    public List<DoctorClinic> getAllDoctorClinicDetailsByDoctorId(Long doctorId) {
+        return doctorClinicRepository.findAllWithClinicByDoctorId(doctorId);
     }
 
     @Transactional
@@ -40,6 +51,9 @@ public class DoctorClinicService {
         return doctorClinicRepository.findById(id)
                 .orElseThrow(() -> new DoctorClinicNotFoundException("DoctorClinic not found with Doctor ID: " + doctorId + " and Clinic ID: " + clinicId));
     }
+
+
+
 
     @Transactional
     public PaginationDTO<DoctorClinic> getAllDoctorClinics(int page, int size) {

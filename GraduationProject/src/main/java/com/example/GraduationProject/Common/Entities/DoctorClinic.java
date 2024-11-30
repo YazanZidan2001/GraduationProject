@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data
 @Builder
@@ -36,6 +37,14 @@ public class DoctorClinic {
     @Column(name = "end_date")
     @NotNull(message = "End date cannot be blank")
     private LocalDate endDate;
+
+    @Column(name = "start_time")
+    @NotNull(message = "start time cannot be blank")
+    private LocalTime startTime;
+
+    @Column(name = "end_time")
+    @NotNull(message = "end time cannot be blank")
+    private LocalTime endTime;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "doctor_id", insertable = false, updatable = false)
