@@ -3,16 +3,17 @@ package com.example.GraduationProject.WebApi.Controllers.Doctor.Patient;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.Patient;
 import com.example.GraduationProject.Common.Entities.User;
+import com.example.GraduationProject.Common.Responses.AuthenticationResponse;
 import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.Core.Services.PatientService;
 import com.example.GraduationProject.SessionManagement;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -40,6 +41,16 @@ public class PatientController extends SessionManagement {
 
         // Fetch and return paginated patient data
         return patientService.getAllPatients(page, size, search);
+    }
+
+    @PostMapping("/addPatient")
+    public ResponseEntity<AuthenticationResponse> addPatient(@RequestBody @Valid Patient request , HttpServletRequest httpServletRequest) throws UserNotFoundException {
+
+        String token = service.extractToken(httpServletRequest);
+        User user = service.extractUserFromToken(token);
+        validateLoggedInDoctorOrAdmin(user);
+
+        return new ResponseEntity<>(patientService.addPatient(request), HttpStatus.CREATED);
     }
 
 }
