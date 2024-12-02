@@ -1,5 +1,6 @@
 package com.example.GraduationProject.WebApi.Controllers.Admin.Specialization;
 
+import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.User;
 import com.example.GraduationProject.Common.Entities.Specialization;
 import com.example.GraduationProject.Core.Services.SpecializationService;
@@ -11,6 +12,7 @@ import com.example.GraduationProject.Common.Responses.GeneralResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +33,22 @@ public class SpecializationController extends SessionManagement {
         specializationService.addSpecialization(request);
         return ResponseEntity.ok(GeneralResponse.builder().message("Specialization added successfully").build());
     }
+
+
+    @GetMapping("/getAllSpecializations")
+    public PaginationDTO<Specialization> getAllSpecializations(@RequestParam(defaultValue = "1") int page,
+                                                               @RequestParam(defaultValue = "10") int size,
+                                                               @RequestParam(defaultValue = "", required = false) String search,
+                                                               HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        // Validate logged-in admin user
+        String token = service.extractToken(httpServletRequest);
+        User user = service.extractUserFromToken(token);
+        validateLoggedInAdmin(user);
+
+        // Call service method to get paginated results
+        return specializationService.getAllSpecializationsBySearch(page, size, search);
+    }
+
 
     @PutMapping("/")
     public ResponseEntity<GeneralResponse> updateSpecialization(@RequestBody @Valid Specialization request, HttpServletRequest httpServletRequest) throws NotFoundException, UserNotFoundException {
