@@ -21,7 +21,7 @@ public class Patient {
 
     @Id
     @Column(name = "patient_id", nullable = false, unique = true)
-    private long patientId;
+    private Long patientId;
 
     @Column(name = "blood_type", nullable = true)
     @Enumerated(EnumType.STRING)

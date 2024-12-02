@@ -2,6 +2,7 @@ package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.*;
+import com.example.GraduationProject.Common.Entities.Patient;
 import com.example.GraduationProject.Common.Enums.Role;
 import com.example.GraduationProject.Common.Enums.TokenType;
 import com.example.GraduationProject.Common.Responses.AuthenticationResponse;
@@ -216,6 +217,17 @@ public class PatientService {
             token.setRevoked(true);
         });
         tokenRepository.saveAll(validUserTokens);
+    }
+
+
+    @Transactional
+    public Patient findByPatientId(long UserID) throws UserNotFoundException {
+        Patient patient = patientRepository.findByPatientId(UserID)
+                .orElseThrow(() -> new UserNotFoundException("Patient not found with UserID: " + UserID));
+        return patient;
+
+//        Patient patient = patientRepository.findByPatientId(UserID);
+
     }
 
     @Transactional

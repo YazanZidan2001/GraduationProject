@@ -1,5 +1,6 @@
 package com.example.GraduationProject.Core.Repositories;
 
+import com.example.GraduationProject.Common.Entities.Doctor;
 import com.example.GraduationProject.Common.Entities.Patient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,9 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
     @Query("SELECT p FROM Patient p WHERE p.user.email = :email AND p.user.isDeleted = false")
     Optional<Patient> findByUserEmail(@Param("email") String email);
 
-    @Query("SELECT p FROM Patient p WHERE p.patientId = :patientId")
-    Optional<Patient> findByPatientId(@Param("patientId") Long patientId);
+    @Query("SELECT p FROM Patient p WHERE p.user.UserID = :UserID AND p.user.isDeleted = false")
+    Optional<Patient> findByPatientId(@Param("UserID") long UserID);
+
+//    @Query("SELECT p FROM Patient p WHERE p.patientId = :patientId")
+//    Optional<Patient> findByPatientId(@Param("patientId") Long patientId);
 }

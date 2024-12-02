@@ -53,4 +53,16 @@ public class PatientController extends SessionManagement {
         return new ResponseEntity<>(patientService.addPatient(request), HttpStatus.CREATED);
     }
 
+
+
+    @GetMapping("/{UserID}")
+    public ResponseEntity<Patient> getPatient(@PathVariable long UserID, HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        String token = service.extractToken(httpServletRequest);
+        User user = service.extractUserFromToken(token);
+        validateLoggedInAllUser(user);
+
+        Patient patient = patientService.findByPatientId(UserID);
+        return ResponseEntity.ok(patient);
+    }
+
 }
