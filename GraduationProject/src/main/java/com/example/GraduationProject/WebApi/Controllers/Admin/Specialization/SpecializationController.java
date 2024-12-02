@@ -35,7 +35,7 @@ public class SpecializationController extends SessionManagement {
     }
 
 
-    @GetMapping("/getAllSpecializations")
+    @GetMapping("/searchSpecializations")
     public PaginationDTO<Specialization> getAllSpecializations(@RequestParam(defaultValue = "1") int page,
                                                                @RequestParam(defaultValue = "10") int size,
                                                                @RequestParam(defaultValue = "", required = false) String search,
