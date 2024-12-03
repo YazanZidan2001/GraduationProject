@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 public interface VisitRepository extends JpaRepository<Visit, VisitCompositeKey> {
 
@@ -37,6 +38,8 @@ public interface VisitRepository extends JpaRepository<Visit, VisitCompositeKey>
 
     @Query("SELECT v FROM Visit v WHERE v.doctorId = :doctorID AND v.visitDate = :date")
     Page<Visit> findByDoctorIdAndVisitDate(@Param("doctorID") Long doctorID, @Param("date") LocalDate date, Pageable pageable);
+
+    Optional<Visit> findTopByOrderByVisitIDDesc();
 
 
 

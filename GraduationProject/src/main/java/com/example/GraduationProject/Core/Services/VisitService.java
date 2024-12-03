@@ -7,6 +7,7 @@ import com.example.GraduationProject.Core.Repositories.VisitRepository;
 import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,12 +19,35 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class VisitService {
 
+
+    @Autowired
     private final VisitRepository visitRepository;
+    @Autowired
+    private final DoctorClinicService doctorClinicService;
 
     @Transactional
-    public void addVisit(Visit visit) {
+    public void addVisit(Visit visit, Long doctorIdFromToken) {
+        // Fetch the last visit ID from the repository
+        Long lastVisitId = visitRepository.findTopByOrderByVisitIDDesc()
+                .map(Visit::getVisitID)
+                .orElse(0L); // Default to 0 if no visits exist
+
+        // Set the new visit ID
+        visit.setVisitID(lastVisitId + 1);
+
+        // Automatically set the visit date to the current date
+        visit.setVisitDate(LocalDate.now());
+
+        // Set the doctor ID from the token
+        visit.setDoctorId(doctorIdFromToken);
+
+
+        visit.setClinicId(doctorClinicService.getClinicIdsByDoctorId(doctorIdFromToken).getFirst());
+
+        // Save the new visit
         visitRepository.save(visit);
     }
+
 
     @Transactional
     public PaginationDTO<Visit> searchVisitsByPatientFields(String search, int page, int size) {

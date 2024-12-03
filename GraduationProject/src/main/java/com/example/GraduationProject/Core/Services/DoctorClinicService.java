@@ -28,6 +28,9 @@ public class DoctorClinicService {
         doctorClinicRepository.save(doctorClinic);
     }
 
+    public List<Long> getClinicIdsByDoctorId(Long doctorId) {
+        return doctorClinicRepository.findClinicIdsByDoctorId(doctorId);
+    }
 
     public List<DoctorClinic> getAllDoctorClinicDetailsByDoctorId(Long doctorId) {
         return doctorClinicRepository.findAllWithClinicByDoctorId(doctorId);

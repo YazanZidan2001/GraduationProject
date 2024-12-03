@@ -13,4 +13,6 @@ public interface DoctorClinicRepository extends JpaRepository<DoctorClinic, Doct
     @Query("SELECT dc FROM DoctorClinic dc JOIN FETCH dc.clinic c WHERE dc.doctorId = :doctorId")
     List<DoctorClinic> findAllWithClinicByDoctorId(Long doctorId);
 
+    @Query("SELECT dc.clinicId FROM DoctorClinic dc WHERE dc.doctorId = :doctorId")
+    List<Long> findClinicIdsByDoctorId(Long doctorId);
 }

@@ -38,6 +38,18 @@ public class DoctorClinicController extends SessionManagement {
         return ResponseEntity.ok(GeneralResponse.builder().message("DoctorClinic added successfully").build());
     }
 
+    @GetMapping("/clinic-ids/{doctorId}")
+    public ResponseEntity<List<Long>> getClinicIdsByDoctorId(@PathVariable Long doctorId, HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        // Extract and validate logged-in admin
+        String token = service.extractToken(httpServletRequest);
+        User user = service.extractUserFromToken(token);
+        validateLoggedInAdmin(user);
+
+        // Fetch and return clinic IDs for the doctor
+        List<Long> clinicIds = doctorClinicService.getClinicIdsByDoctorId(doctorId);
+        return ResponseEntity.ok(clinicIds);
+    }
+
     @GetMapping("/details/by-doctor/{doctorId}")
     public ResponseEntity<List<DoctorClinic>> getAllDetailsByDoctorId(@PathVariable Long doctorId, HttpServletRequest httpServletRequest) throws UserNotFoundException {
         // Extract and validate the logged-in user as admin

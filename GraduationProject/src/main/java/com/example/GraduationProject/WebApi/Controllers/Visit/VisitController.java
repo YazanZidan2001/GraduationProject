@@ -4,12 +4,14 @@ import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.User;
 import com.example.GraduationProject.Common.Entities.Visit;
 import com.example.GraduationProject.Core.Services.AuthenticationService;
+import com.example.GraduationProject.Core.Services.DoctorClinicService;
 import com.example.GraduationProject.Core.Services.VisitService;
 import com.example.GraduationProject.SessionManagement;
 import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +25,7 @@ public class VisitController extends SessionManagement {
     private final VisitService visitService;
     private final AuthenticationService authenticationService;
 
+
     /**
      * Add a new visit (only doctors can add visits).
      */
@@ -31,11 +34,20 @@ public class VisitController extends SessionManagement {
             throws UserNotFoundException {
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
+
+        // Validate that the logged-in user is a doctor
         validateLoggedInDoctor(user);
 
-        visitService.addVisit(visit);
+        // Extract the doctor ID from the token
+        Long doctorIdFromToken = user.getUserID();
+
+
+        // Call the service to add the visit
+        visitService.addVisit(visit, doctorIdFromToken);
+
         return ResponseEntity.ok("Visit added successfully");
     }
+
 
 
     /**
