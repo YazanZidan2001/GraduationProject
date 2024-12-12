@@ -16,9 +16,12 @@ import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.Core.Services.PatientService;
 import com.example.GraduationProject.SessionManagement;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -32,6 +35,42 @@ public class PatientAuthenticationController extends SessionManagement {
     private final SpecializationRepository specializationRepository;
     private final CategoryRepository categoryRepository;
     private final PatientLikeDoctorService patientLikeDoctorService;
+
+
+
+    @GetMapping("/me")
+    public ResponseEntity<Patient> getPatientDetails(HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        // Extract token from the request
+        String token = authenticationService.extractToken(httpServletRequest);
+
+        // Get the patient details using the token
+        Patient patient = patientService.getPatientDetailsFromToken(token);
+
+        // Return the full patient details
+        return ResponseEntity.ok(patient);
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<GeneralResponse> updatePatientDetails(@RequestBody @Valid Patient updatedPatientDetails, HttpServletRequest httpServletRequest) {
+        try {
+            // Extract the token and update the patient
+            String token = authenticationService.extractToken(httpServletRequest);
+            GeneralResponse response = patientService.updatePatientDetailsFromToken(token, updatedPatientDetails);
+
+            // If successful, return the success message
+            return ResponseEntity.ok(response);
+        } catch (UserNotFoundException e) {
+            // Return failure response with errors
+            List<String> errors = Arrays.asList("Patient not found", e.getMessage());
+            GeneralResponse errorResponse = new GeneralResponse("Patient update failed", false, errors);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        } catch (Exception e) {
+            // Return a generic error response
+            GeneralResponse errorResponse = new GeneralResponse("An unexpected error occurred", false);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
 
     @PostMapping("/rating/{doctorId}")
     public ResponseEntity<GeneralResponse> addRating(

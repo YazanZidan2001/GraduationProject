@@ -40,6 +40,73 @@ public class PatientService {
 
 
     @Transactional
+    public Patient getPatientDetailsFromToken(String token) throws UserNotFoundException {
+        // Extract user details from the token
+        String email = jwtService.extractUsername(token); // Assuming the email is stored in the token
+
+        // Find the patient by the email associated with the user
+        Patient patient = patientRepository.findByUserEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Patient not found"));
+
+        // Return the full patient object with all relevant details
+        return patient;
+    }
+
+    @Transactional
+    public GeneralResponse updatePatientDetailsFromToken(String token, Patient updatedPatientDetails) throws UserNotFoundException {
+        // Extract the user (patient) from the token
+        String email = jwtService.extractUsername(token);
+
+        // Retrieve the patient using the email from the token
+        Patient patient = patientRepository.findByUserEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Patient not found with email: " + email));
+
+        // Update the patient's details based on the provided data
+        User user = patient.getUser();
+
+        // Update user's details
+        if (updatedPatientDetails.getUser().getFirstName() != null) {
+            user.setFirstName(updatedPatientDetails.getUser().getFirstName());
+        }
+        if (updatedPatientDetails.getUser().getLastName() != null) {
+            user.setLastName(updatedPatientDetails.getUser().getLastName());
+        }
+        if (updatedPatientDetails.getUser().getPhone() != null) {
+            user.setPhone(updatedPatientDetails.getUser().getPhone());
+        }
+        if (updatedPatientDetails.getUser().getEmail() != null) {
+            user.setEmail(updatedPatientDetails.getUser().getEmail());
+        }
+        if (updatedPatientDetails.getUser().getDateOfBirth() != null) {
+            user.setDateOfBirth(updatedPatientDetails.getUser().getDateOfBirth());
+        }
+
+        // Update the patient's details
+        if (updatedPatientDetails.getGender() != null) {
+            patient.setGender(updatedPatientDetails.getGender());
+        }
+        if (updatedPatientDetails.getHeight() != null) {
+            patient.setHeight(updatedPatientDetails.getHeight());
+        }
+        if (updatedPatientDetails.getWeight() != null) {
+            patient.setWeight(updatedPatientDetails.getWeight());
+        }
+        if (updatedPatientDetails.getRemarks() != null) {
+            patient.setRemarks(updatedPatientDetails.getRemarks());
+        }
+        if (updatedPatientDetails.getBloodType() != null) {
+            patient.setBloodType(updatedPatientDetails.getBloodType());
+        }
+
+        // Save the updated patient and user
+        userRepository.save(user);
+        patientRepository.save(patient);
+
+        // Return a success message
+        return GeneralResponse.builder().message("Patient details updated successfully").build();
+    }
+
+    @Transactional
     public DoctorRating addRating(Long doctorId, Integer ratingValue, String comments, User patient) throws NotFoundException {
         if (ratingValue < 1 || ratingValue > 5) {
             throw new IllegalArgumentException("Rating value must be between 1 and 5.");
