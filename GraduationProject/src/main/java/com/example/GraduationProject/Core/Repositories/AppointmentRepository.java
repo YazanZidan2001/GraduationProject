@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, AppointmentCompositeKey> {
@@ -34,12 +35,22 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Appoin
 
     Page<Appointment> findByPatient_PatientId(Long patientId, Pageable pageable);
 
+    Page<Appointment> findByPatient_PatientIdAndIsCancelled(Long patientID, Boolean isCancelled, Pageable pageable);
 
+    Page<Appointment> findByPatient_PatientIdAndIsDoneFalseAndIsCancelledFalse(Long patientID, Pageable pageable);
 
+    Page<Appointment> findByPatientIDAndIsDoneAndIsCancelled(Long patientID, boolean isDone, boolean isCancelled, Pageable pageable);
 
     // Find appointments by appointment date
     Page<Appointment> findByAppointmentDate(LocalDate appointmentDate, Pageable pageable);
 
     // Find appointments by clinic ID
     Page<Appointment> findByClinic_ClinicId(Long clinicID, Pageable pageable);
+
+    @Query(value = "SELECT * FROM appointment WHERE appointment_id = :appointmentId AND patient_id = :patientId", nativeQuery = true)
+    Optional<Appointment> findAppointmentByAppointmentIdAndPatientId(@Param("appointmentId") Long appointmentId, @Param("patientId") Long patientId);
+
+    public Optional<Appointment> findById(AppointmentCompositeKey id);
+
+
 }

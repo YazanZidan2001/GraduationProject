@@ -1,6 +1,7 @@
 package com.example.GraduationProject.Common.Entities;
 
 import com.example.GraduationProject.Common.CompositeKey.AppointmentCompositeKey;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -60,7 +61,13 @@ public class Appointment {
     @NotNull(message = "Appointment date cannot be blank")
     private LocalDate appointmentDate;
 
-    @Column(name = "is_done", nullable = false)
-    @NotNull(message = "isDone cannot be blank")
-    private Boolean isDone;
+    @Column(name = "is_done")
+    @JsonIgnore
+    @Builder.Default
+    private Boolean isDone = false;
+
+    @Column(name = "is_cancelled")
+    @JsonIgnore
+    @Builder.Default
+    private Boolean isCancelled = false;
 }
