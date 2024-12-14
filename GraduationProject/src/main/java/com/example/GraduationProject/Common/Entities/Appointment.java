@@ -62,12 +62,10 @@ public class Appointment {
     private LocalDate appointmentDate;
 
     @Column(name = "is_done")
-    @JsonIgnore
     @Builder.Default
     private Boolean isDone = false;
 
     @Column(name = "is_cancelled")
-    @JsonIgnore
     @Builder.Default
     private Boolean isCancelled = false;
 }
