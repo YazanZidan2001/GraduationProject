@@ -70,6 +70,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Appoin
             @Param("search") String search,
             Pageable pageable);
 
+    @Query("SELECT a FROM Appointment a WHERE a.appointmentID = :appointmentID AND a.doctorID = :doctorID")
+    Optional<Appointment> findAppointmentByIdAndDoctorID(@Param("appointmentID") Long appointmentID, @Param("doctorID") Long doctorID);
 
 
 }

@@ -352,6 +352,25 @@ public class AppointmentController extends SessionManagement {
         return ResponseEntity.ok(appointments);
     }
 
+    @PutMapping("/doctor/mark-done/{appointmentID}")
+    public ResponseEntity<String> markAppointmentAsDoneByDoctor(
+            @PathVariable Long appointmentID,
+            HttpServletRequest request) throws UserNotFoundException, NotFoundException {
+        // Extract token and validate the logged-in doctor
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        // Get the doctor's ID from the logged-in user's profile
+        Long doctorID = user.getDoctor().getDoctorId();
+
+        // Mark the appointment as done
+        appointmentService.markAppointmentAsDone(appointmentID, doctorID);
+
+        // Return a success message
+        return ResponseEntity.ok("Appointment marked as done successfully");
+    }
+
 
     @GetMapping
     public ResponseEntity<PaginationDTO<Appointment>> getAllAppointments(

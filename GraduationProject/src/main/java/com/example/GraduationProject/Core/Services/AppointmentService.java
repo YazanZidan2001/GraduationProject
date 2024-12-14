@@ -207,6 +207,15 @@ public class AppointmentService {
         return mapToPaginationDTO(appointments);
     }
 
+    @Transactional
+    public void markAppointmentAsDone(Long appointmentID, Long doctorID) throws NotFoundException {
+        Appointment appointment = appointmentRepository.findAppointmentByIdAndDoctorID(appointmentID, doctorID)
+                .orElseThrow(() -> new NotFoundException("Appointment not found with Appointment ID: " + appointmentID + " for Doctor ID: " + doctorID));
+
+        appointment.setIsDone(true);
+        appointmentRepository.save(appointment);
+    }
+
 
 
 
