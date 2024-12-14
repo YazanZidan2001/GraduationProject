@@ -180,6 +180,36 @@ public class AppointmentService {
     }
 
 
+    @Transactional
+    public PaginationDTO<Appointment> getTodayAppointmentsForDoctor(Long doctorID, int page, int size) {
+        // Define pagination
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        // Get the current date
+        LocalDate today = LocalDate.now();
+
+        // Fetch appointments for today and the specific doctor
+        Page<Appointment> appointments = appointmentRepository.findByDoctorIDAndAppointmentDate(doctorID, today, pageable);
+
+        // Map to pagination DTO
+        return mapToPaginationDTO(appointments);
+    }
+
+    @Transactional
+    public PaginationDTO<Appointment> searchAppointmentsForDoctor(Long doctorID, String search, LocalDate date, int page, int size) {
+        // Define pagination
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        // Fetch appointments based on the doctor ID, date, and search criteria
+        Page<Appointment> appointments = appointmentRepository.searchAppointmentsByDoctorIDAndPatientDetailsAndDate(doctorID, date, search, pageable);
+
+        // Map to pagination DTO
+        return mapToPaginationDTO(appointments);
+    }
+
+
+
+
 
     private PaginationDTO<Appointment> mapToPaginationDTO(Page<Appointment> page) {
         PaginationDTO<Appointment> paginationDTO = new PaginationDTO<>();

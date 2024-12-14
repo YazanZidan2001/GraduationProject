@@ -21,6 +21,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Appoin
     // Find appointments by doctor ID
     Page<Appointment> findByDoctorID(Long doctorID, Pageable pageable);
 
+    Page<Appointment> findByDoctorIDAndAppointmentDate(Long doctorID, LocalDate appointmentDate, Pageable pageable);
+
     // Find appointments by patient ID
     @Query("SELECT a FROM Appointment a " +
             "JOIN a.patient p " +
@@ -51,6 +53,23 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Appoin
     Optional<Appointment> findAppointmentByAppointmentIdAndPatientId(@Param("appointmentId") Long appointmentId, @Param("patientId") Long patientId);
 
     public Optional<Appointment> findById(AppointmentCompositeKey id);
+
+    @Query("SELECT a FROM Appointment a " +
+            "JOIN a.patient p " +
+            "JOIN p.user u " +
+            "WHERE a.doctorID = :doctorID " +
+            "AND (:date IS NULL OR a.appointmentDate = :date) " +
+            "AND (:search IS NULL OR :search = '' " +
+            "OR CAST(p.patientId AS string) LIKE %:search% " +
+            "OR u.firstName LIKE %:search% " +
+            "OR u.lastName LIKE %:search% " +
+            "OR u.email LIKE %:search%)")
+    Page<Appointment> searchAppointmentsByDoctorIDAndPatientDetailsAndDate(
+            @Param("doctorID") Long doctorID,
+            @Param("date") LocalDate date,
+            @Param("search") String search,
+            Pageable pageable);
+
 
 
 }

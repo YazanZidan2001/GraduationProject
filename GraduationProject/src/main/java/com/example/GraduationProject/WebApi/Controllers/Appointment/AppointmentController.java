@@ -308,6 +308,50 @@ public class AppointmentController extends SessionManagement {
     }
 
 
+    // Get appointments for the logged-in doctor for the current date
+    @GetMapping("/doctor/today")
+    public ResponseEntity<PaginationDTO<Appointment>> getTodayAppointmentsForLoggedInDoctor(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) throws UserNotFoundException {
+        // Extract token and validate the logged-in doctor
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        // Get the doctor's ID from the logged-in user's profile
+        Long doctorID = user.getDoctor().getDoctorId();
+
+        // Fetch today's appointments for the logged-in doctor
+        PaginationDTO<Appointment> appointments = appointmentService.getTodayAppointmentsForDoctor(doctorID, page, size);
+
+        // Return the appointments
+        return ResponseEntity.ok(appointments);
+    }
+
+    // Get all appointments for the logged-in doctor
+    @GetMapping("/doctor/all")
+    public ResponseEntity<PaginationDTO<Appointment>> getAllAppointmentsForLoggedInDoctor(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) LocalDate date,
+            HttpServletRequest request) throws UserNotFoundException {
+        // Extract token and validate the logged-in doctor
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        // Get the doctor's ID from the logged-in user's profile
+        Long doctorID = user.getDoctor().getDoctorId();
+
+        // Fetch appointments for the logged-in doctor with the search criteria and date filter
+        PaginationDTO<Appointment> appointments = appointmentService.searchAppointmentsForDoctor(doctorID, search, date, page, size);
+
+        // Return the appointments
+        return ResponseEntity.ok(appointments);
+    }
+
 
     @GetMapping
     public ResponseEntity<PaginationDTO<Appointment>> getAllAppointments(
