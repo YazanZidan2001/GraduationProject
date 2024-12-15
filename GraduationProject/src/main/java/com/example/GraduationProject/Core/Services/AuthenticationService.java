@@ -35,6 +35,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
@@ -64,13 +66,13 @@ public class AuthenticationService extends SessionManagement {
         User user = extractUserFromToken(token);
         validateLoggedInAllUser(user);
 
-        // Resolve the folder path relative to the project root
-        String folderPath = System.getProperty("user.dir") + File.separator + "user-photos" + File.separator;
-        File folder = new File(folderPath);
+        // Resolve the folder path using Paths
+        Path folderPath = Paths.get(System.getProperty("user.dir"), "user-photos");
+        File folder = folderPath.toFile();
 
         // Ensure the folder exists
         if (!folder.exists() && !folder.mkdirs()) {
-            throw new IOException("Failed to create directory for photos.");
+            throw new IOException("Failed to create directory for photos at: " + folderPath);
         }
 
         // Validate file format and size
@@ -84,19 +86,21 @@ public class AuthenticationService extends SessionManagement {
 
         // Generate a unique file name
         String fileName = "user_" + user.getUserID() + "_" + System.currentTimeMillis() + "." + fileExtension;
-        File photoFile = new File(folderPath + fileName);
+        Path photoFilePath = folderPath.resolve(fileName);
+        File photoFile = photoFilePath.toFile();
 
         // Save the file locally
         file.transferTo(photoFile);
 
         // Update the user's photo path
-        user.setPhotoPath(folderPath + fileName);
+        user.setPhotoPath(photoFilePath.toString());
         repository.save(user);
 
         return GeneralResponse.builder()
                 .message("Photo uploaded successfully")
                 .build();
     }
+
 
 
 
@@ -112,9 +116,13 @@ public class AuthenticationService extends SessionManagement {
             throw new FileNotFoundException("Photo file not found at path: " + photoPath);
         }
 
+        // Log the resolved photo path for debugging
+        System.out.println("Resolved photo path: " + photoFile.getAbsolutePath());
+
         // Return the photo as a resource
         return new UrlResource(photoFile.toURI());
     }
+
 
 
 
