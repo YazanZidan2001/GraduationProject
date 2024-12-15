@@ -69,7 +69,6 @@ public class AuthenticationService extends SessionManagement {
         // Resolve the folder path using Paths
         Path folderPath = Paths.get(System.getProperty("user.dir"), "user-photos");
         File folder = folderPath.toFile();
-
         // Ensure the folder exists
         if (!folder.exists() && !folder.mkdirs()) {
             throw new IOException("Failed to create directory for photos at: " + folderPath);
