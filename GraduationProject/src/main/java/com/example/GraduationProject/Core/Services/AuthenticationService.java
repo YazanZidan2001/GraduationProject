@@ -61,23 +61,23 @@ public class AuthenticationService extends SessionManagement {
 
     @Transactional
     public GeneralResponse uploadPhoto(String token, MultipartFile file) throws UserNotFoundException, IOException {
-        // Extract user from token
         User user = extractUserFromToken(token);
-        validateLoggedInAllUser(user); // Validate user's role
+        validateLoggedInAllUser(user);
 
-        // Define the folder path
+        // Directory setup
         String folderPath = "user-photos/";
         File folder = new File(folderPath);
-
-        // Ensure the folder exists
         if (!folder.exists() && !folder.mkdirs()) {
             throw new IOException("Failed to create directory for photos.");
         }
 
-        // Validate file format
+        // Validate file format and size
         String fileExtension = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1).toLowerCase();
         if (!List.of("jpg", "jpeg", "png").contains(fileExtension)) {
             throw new IllegalArgumentException("Invalid file type. Only JPG, JPEG, and PNG are allowed.");
+        }
+        if (file.getSize() > 5 * 1024 * 1024) { // 5MB limit
+            throw new IllegalArgumentException("File size exceeds the 5MB limit.");
         }
 
         // Generate a unique file name
@@ -87,7 +87,7 @@ public class AuthenticationService extends SessionManagement {
         // Save the file locally
         file.transferTo(photoFile);
 
-        // Update the user's photo path in the database
+        // Update the user's photo path
         user.setPhotoPath(folderPath + fileName);
         repository.save(user);
 
@@ -99,20 +99,20 @@ public class AuthenticationService extends SessionManagement {
 
     @Transactional
     public Resource getPhotoForUser(User user) throws IOException {
-        // Retrieve the photo path from the user entity
         String photoPath = user.getPhotoPath();
         if (photoPath == null || photoPath.isEmpty()) {
             throw new FileNotFoundException("No photo found for the user.");
         }
 
-        // Load the photo as a resource
         File photoFile = new File(photoPath);
         if (!photoFile.exists()) {
             throw new FileNotFoundException("Photo file not found at path: " + photoPath);
         }
 
+        // Return the photo as a resource
         return new UrlResource(photoFile.toURI());
     }
+
 
 
 
