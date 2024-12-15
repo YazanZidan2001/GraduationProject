@@ -64,9 +64,11 @@ public class AuthenticationService extends SessionManagement {
         User user = extractUserFromToken(token);
         validateLoggedInAllUser(user);
 
-        // Directory setup
-        String folderPath = "user-photos/";
+        // Resolve the folder path relative to the project root
+        String folderPath = System.getProperty("user.dir") + File.separator + "user-photos" + File.separator;
         File folder = new File(folderPath);
+
+        // Ensure the folder exists
         if (!folder.exists() && !folder.mkdirs()) {
             throw new IOException("Failed to create directory for photos.");
         }
@@ -95,6 +97,7 @@ public class AuthenticationService extends SessionManagement {
                 .message("Photo uploaded successfully")
                 .build();
     }
+
 
 
     @Transactional
