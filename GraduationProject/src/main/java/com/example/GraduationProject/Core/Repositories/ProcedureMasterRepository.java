@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ProcedureMasterRepository extends JpaRepository<ProcedureMaster, String> {
 
@@ -16,5 +18,5 @@ public interface ProcedureMasterRepository extends JpaRepository<ProcedureMaster
             "(:search IS NULL OR :search = '' OR " +
             "p.procedure_name LIKE %:search% OR " +
             "p.procedure_description LIKE %:search%)")
-    Page<ProcedureMaster> searchProcedures(@Param("search") String search, Pageable pageable);
+    List<ProcedureMaster> searchProceduresWithoutPagination(@Param("search") String search);
 }

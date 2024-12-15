@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin/procedures")
 @RequiredArgsConstructor
@@ -24,15 +26,14 @@ public class ProcedureMasterController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<PaginationDTO<ProcedureMaster>> getAllProcedures(
-            @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        // Fetch procedures with pagination and optional search
-        PaginationDTO<ProcedureMaster> procedures = procedureMasterService.getAllProcedures(search, page, size);
+    public ResponseEntity<List<ProcedureMaster>> getAllProcedures(
+            @RequestParam(required = false) String search) {
+        // Fetch all procedures with optional search
+        List<ProcedureMaster> procedures = procedureMasterService.getAllProcedures(search);
 
         // Return the response
         return ResponseEntity.ok(procedures);
     }
+
 
 }

@@ -25,26 +25,16 @@ public class ProcedureMasterService {
     }
 
     @Transactional
-    public PaginationDTO<ProcedureMaster> getAllProcedures(String search, int page, int size) {
-        // Define pagination
-        Pageable pageable = PageRequest.of(page - 1, size);
-
-        // Search procedures with the search query
-        Page<ProcedureMaster> proceduresPage = procedureMasterRepository.searchProcedures(search, pageable);
-
-        // Map Page to PaginationDTO
-        return mapToPaginationDTO(proceduresPage);
+    public List<ProcedureMaster> getAllProcedures(String search) {
+        // Check if a search term is provided
+        if (search != null && !search.isEmpty()) {
+            // Search procedures based on the search query
+            return procedureMasterRepository.searchProceduresWithoutPagination(search);
+        } else {
+            // Fetch all procedures
+            return procedureMasterRepository.findAll();
+        }
     }
 
-    private PaginationDTO<ProcedureMaster> mapToPaginationDTO(Page<ProcedureMaster> page) {
-        return PaginationDTO.<ProcedureMaster>builder()
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .size(page.getSize())
-                .number(page.getNumber() + 1) // Convert zero-based index to one-based index
-                .numberOfElements(page.getNumberOfElements())
-                .content(page.getContent())
-                .build();
-    }
 
 }
