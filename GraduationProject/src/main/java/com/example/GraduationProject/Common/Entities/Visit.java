@@ -60,15 +60,16 @@ public class Visit {
     @Column(name = "medical_leave_days", nullable = true)
     private Integer medicalLeaveDays;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "clinic_id", insertable = false, updatable = false)
     private Clinic clinic;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "doctor_id", insertable = false, updatable = false)
     private Doctor doctor;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "patient_id", insertable = false, updatable = false)
     private Patient patient;
+
 }
