@@ -1,8 +1,11 @@
 package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
+import com.example.GraduationProject.Common.Entities.Visit;
 import com.example.GraduationProject.Common.Entities.XRay;
+import com.example.GraduationProject.Core.Repositories.VisitRepository;
 import com.example.GraduationProject.Core.Repositories.XRayRepository;
+import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,8 +18,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class XRayService {
 
     private final XRayRepository xRayRepository;
+    private final VisitRepository visitRepository;
 
-    public void addXRay(XRay xRay) {
+    public void addXRay(XRay xRay) throws NotFoundException {
+
+        Visit visit = visitRepository.findByVisitID(xRay.getVisitId())
+                .orElseThrow(() -> new NotFoundException("Visit not found with ID: " + xRay.getVisitId()));
+
+        // Set clinic_id, doctor_id, patient_id from the Visit entity
+        xRay.setClinicId(visit.getClinicId());
+        xRay.setDoctorId(visit.getDoctorId());
+        xRay.setPatientId(visit.getPatientId());
         xRayRepository.save(xRay);
     }
 

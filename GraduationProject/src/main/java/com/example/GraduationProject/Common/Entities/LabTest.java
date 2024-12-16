@@ -54,6 +54,12 @@ public class LabTest {
     @Column(name = "insert_time", nullable = false)
     private LocalDateTime insertTime;
 
+    @Column(name = "clinic_id", nullable = false)
+    private Long clinicId;
+
+    @Column(name = "doctor_id", nullable = false)
+    private Long doctorId;
+
     // Automatically populate insertTime before persisting
     @PrePersist
     protected void onInsert() {
@@ -68,9 +74,5 @@ public class LabTest {
             @JoinColumn(name = "patient_id", referencedColumnName = "patient_id", insertable = false, updatable = false)
     })
     private Visit visit;
-    // Optional: Access patient data from the visit
-    @Transient
-    public Long getAssociatedPatientId() {
-        return this.visit != null ? this.visit.getPatientId() : null;
-    }
+
 }

@@ -60,6 +60,12 @@ public class XRay {
         this.insertTime = LocalDateTime.now();
     }
 
+    @Column(name = "clinic_id", nullable = false)
+    private Long clinicId;
+
+    @Column(name = "doctor_id", nullable = false)
+    private Long doctorId;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumns({
             @JoinColumn(name = "visit_id", referencedColumnName = "visit_id", insertable = false, updatable = false),

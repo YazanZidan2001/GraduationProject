@@ -2,7 +2,10 @@ package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.LabTest;
+import com.example.GraduationProject.Common.Entities.Visit;
 import com.example.GraduationProject.Core.Repositories.LabTestRepository;
+import com.example.GraduationProject.Core.Repositories.VisitRepository;
+import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,8 +18,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class LabTestService {
 
     private final LabTestRepository labTestRepository;
+    private final VisitRepository visitRepository;
 
-    public void addLabTest(LabTest labTest) {
+    public void addLabTest(LabTest labTest) throws NotFoundException {
+        Visit visit = visitRepository.findByVisitID(labTest.getVisitId())
+                .orElseThrow(() -> new NotFoundException("Visit not found with ID: " + labTest.getVisitId()));
+
+        // Set clinic_id, doctor_id, patient_id from the Visit entity
+        labTest.setClinicId(visit.getClinicId());
+        labTest.setDoctorId(visit.getDoctorId());
+        labTest.setPatientId(visit.getPatientId());
         labTestRepository.save(labTest);
     }
 

@@ -6,6 +6,7 @@ import com.example.GraduationProject.Common.Entities.User;
 import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.Core.Services.LabTestService;
 import com.example.GraduationProject.SessionManagement;
+import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class LabTestController extends SessionManagement {
      */
     @PostMapping
     public ResponseEntity<String> addLabTest(@RequestBody LabTest labTest, HttpServletRequest request)
-            throws UserNotFoundException {
+            throws UserNotFoundException, NotFoundException {
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
