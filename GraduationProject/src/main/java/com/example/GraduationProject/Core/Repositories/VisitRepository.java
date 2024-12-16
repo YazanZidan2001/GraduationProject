@@ -41,6 +41,7 @@ public interface VisitRepository extends JpaRepository<Visit, VisitCompositeKey>
 
     Optional<Visit> findTopByOrderByVisitIDDesc();
 
+    Optional<Visit> findByVisitID(Long visitID);
 
 
 }
