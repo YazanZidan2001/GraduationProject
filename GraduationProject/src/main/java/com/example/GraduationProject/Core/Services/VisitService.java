@@ -26,7 +26,7 @@ public class VisitService {
     private final DoctorClinicService doctorClinicService;
 
     @Transactional
-    public void addVisit(Visit visit, Long doctorIdFromToken) {
+    public Visit addVisit(Visit visit, Long doctorIdFromToken) {
         // Fetch the last visit ID from the repository
         Long lastVisitId = visitRepository.findTopByOrderByVisitIDDesc()
                 .map(Visit::getVisitID)
@@ -41,12 +41,13 @@ public class VisitService {
         // Set the doctor ID from the token
         visit.setDoctorId(doctorIdFromToken);
 
-
+        // Set the clinic ID
         visit.setClinicId(doctorClinicService.getClinicIdsByDoctorId(doctorIdFromToken).getFirst());
 
         // Save the new visit
-        visitRepository.save(visit);
+        return visitRepository.save(visit); // Return the saved visit object
     }
+
 
 
     @Transactional

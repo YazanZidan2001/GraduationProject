@@ -30,7 +30,7 @@ public class VisitController extends SessionManagement {
      * Add a new visit (only doctors can add visits).
      */
     @PostMapping
-    public ResponseEntity<String> addVisit(@RequestBody Visit visit, HttpServletRequest request)
+    public ResponseEntity<Visit> addVisit(@RequestBody Visit visit, HttpServletRequest request)
             throws UserNotFoundException {
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
@@ -41,12 +41,13 @@ public class VisitController extends SessionManagement {
         // Extract the doctor ID from the token
         Long doctorIdFromToken = user.getUserID();
 
+        // Call the service to add the visit and return the saved visit
+        Visit savedVisit = visitService.addVisit(visit, doctorIdFromToken);
 
-        // Call the service to add the visit
-        visitService.addVisit(visit, doctorIdFromToken);
-
-        return ResponseEntity.ok("Visit added successfully");
+        // Return the saved visit object in the response
+        return ResponseEntity.ok(savedVisit);
     }
+
 
 
 

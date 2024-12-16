@@ -44,7 +44,7 @@ public class ProcedureVisitsController extends SessionManagement {
         return ResponseEntity.status(HttpStatus.CREATED).body("Procedure visit added successfully");
     }
 
-    
+
 
     /**
      * Get all procedures for a specific patient (accessible by doctors).
