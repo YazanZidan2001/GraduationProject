@@ -47,7 +47,8 @@ public interface VisitRepository extends JpaRepository<Visit, VisitCompositeKey>
             "JOIN v.patient p " +
             "JOIN p.user u " +
             "WHERE v.doctorId = :doctorId " +
-            "AND (:date IS NULL OR FUNCTION('MONTH', v.visitDate) = FUNCTION('MONTH', :date)) " +
+            "AND (:month IS NULL OR FUNCTION('MONTH', v.visitDate) = :month) " +
+            "AND (:year IS NULL OR FUNCTION('YEAR', v.visitDate) = :year) " +
             "AND (:search IS NULL OR :search = '' OR " +
             "CAST(p.patientId AS string) LIKE %:search% OR " +
             "u.firstName LIKE %:search% OR " +
@@ -55,9 +56,11 @@ public interface VisitRepository extends JpaRepository<Visit, VisitCompositeKey>
             "CONCAT(u.firstName, ' ', u.lastName) LIKE %:search% OR " +
             "u.email LIKE %:search%)")
     Page<Visit> findVisitsByDoctorWithFilters(@Param("doctorId") Long doctorId,
-                                              @Param("date") LocalDate date,
+                                              @Param("month") Integer month,
+                                              @Param("year") Integer year,
                                               @Param("search") String search,
                                               Pageable pageable);
+
 
 
 }

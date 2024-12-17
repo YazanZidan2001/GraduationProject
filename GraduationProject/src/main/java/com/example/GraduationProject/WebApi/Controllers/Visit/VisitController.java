@@ -71,40 +71,26 @@ public class VisitController extends SessionManagement {
     /**
      * Get visits for a specific patient (accessible by doctors).
      */
-    @GetMapping("/patient/{patientID}")
-    public ResponseEntity<PaginationDTO<Visit>> getVisitsForPatient(
-            @PathVariable Long patientID,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            HttpServletRequest request) throws UserNotFoundException {
-        String token = authenticationService.extractToken(request);
-        User user = authenticationService.extractUserFromToken(token);
-        validateLoggedInDoctor(user);
-
-        PaginationDTO<Visit> visits = visitService.findVisitsByPatientID(patientID, page, size);
-        return ResponseEntity.ok(visits);
-    }
-
-
-    /**
-     * Get all visits for the logged-in doctor.
-     */
     @GetMapping("/doctor/visits")
     public ResponseEntity<PaginationDTO<Visit>> getDoctorVisits(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String search, // Optional search parameter
-            @RequestParam(required = false) LocalDate date, // Optional date parameter
+            @RequestParam(required = false) Integer month, // Month parameter
+            @RequestParam(required = false) Integer year,  // Year parameter
+            @RequestParam(required = false) String search,
             HttpServletRequest request) throws UserNotFoundException {
 
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
 
-        // Call the service with filters
-        PaginationDTO<Visit> visits = visitService.findVisitsByDoctor(user.getUserID(), date, search, page, size);
+        PaginationDTO<Visit> visits = visitService.findVisitsByDoctor(user.getUserID(), month, year, search, page, size);
         return ResponseEntity.ok(visits);
     }
+
+
+
+
 
 
     /**
