@@ -32,9 +32,9 @@ public class Patient {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-    @Column(name = "dateOfBirth", nullable = false)
-    @NotNull(message = "Date of birth cannot be blank")
-    private LocalDate dateOfBirth;
+//    @Column(name = "dateOfBirth", nullable = false)
+//    @NotNull(message = "Date of birth cannot be blank")
+//    private LocalDate dateOfBirth;
 
     @Column(name = "height", nullable = true)
     private Float height;

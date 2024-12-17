@@ -158,7 +158,7 @@ public class PatientService {
                 .user(user)                   // Associate with the created/reused user
                 .bloodType(request.getBloodType()) // Directly use the BloodTypes enum
                 .gender(request.getGender())
-                .dateOfBirth(request.getDateOfBirth())
+//                .dateOfBirth(request.getDateOfBirth())
                 .height(request.getHeight())
                 .weight(request.getWeight())
                 .remarks(request.getRemarks())
