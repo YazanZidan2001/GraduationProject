@@ -45,6 +45,23 @@ public class ProcedureVisitsController extends SessionManagement {
     }
 
 
+    @PostMapping("/procedurevisit/batch")
+    public ResponseEntity<String> addMultipleProcedureVisits(@RequestBody List<ProcedureVisits> procedureVisitsList,
+                                                             HttpServletRequest request) throws UserNotFoundException, NotFoundException {
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        for (ProcedureVisits procedureVisits : procedureVisitsList) {
+            procedureVisits.setUserID(user.getUserID());
+        }
+
+        procedureVisitsService.addMultipleProcedureVisits(procedureVisitsList);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Multiple Procedure Visits added successfully");
+    }
+
+
+
 
     /**
      * Get all procedures for a specific patient (accessible by doctors).

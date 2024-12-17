@@ -10,8 +10,11 @@ import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("x-rays")
@@ -34,6 +37,18 @@ public class XRayController extends SessionManagement {
         xRayService.addXRay(xRay);
         return ResponseEntity.ok("XRay added successfully");
     }
+
+    @PostMapping("/xray/batch")
+    public ResponseEntity<String> addMultipleXRays(@RequestBody List<XRay> xRays, HttpServletRequest request)
+            throws UserNotFoundException, NotFoundException {
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        xRayService.addMultipleXRays(xRays);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Multiple XRays added successfully");
+    }
+
 
     /**
      * Get all x-rays for the logged-in patient.

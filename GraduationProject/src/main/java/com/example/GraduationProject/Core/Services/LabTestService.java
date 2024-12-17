@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class LabTestService {
@@ -29,6 +31,20 @@ public class LabTestService {
         labTest.setDoctorId(visit.getDoctorId());
         labTest.setPatientId(visit.getPatientId());
         labTestRepository.save(labTest);
+    }
+
+    @Transactional
+    public void addMultipleLabTests(List<LabTest> labTests) throws NotFoundException {
+        for (LabTest labTest : labTests) {
+            Visit visit = visitRepository.findByVisitID(labTest.getVisitId())
+                    .orElseThrow(() -> new NotFoundException("Visit not found with ID: " + labTest.getVisitId()));
+
+            labTest.setClinicId(visit.getClinicId());
+            labTest.setDoctorId(visit.getDoctorId());
+            labTest.setPatientId(visit.getPatientId());
+
+            labTestRepository.save(labTest);
+        }
     }
 
     public PaginationDTO<LabTest> getLabTestsByPatientId(Long patientId, int page, int size) {

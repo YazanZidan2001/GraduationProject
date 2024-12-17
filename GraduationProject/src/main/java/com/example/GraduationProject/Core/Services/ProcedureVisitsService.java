@@ -38,6 +38,22 @@ public class ProcedureVisitsService {
     }
 
     @Transactional
+    public void addMultipleProcedureVisits(List<ProcedureVisits> procedureVisitsList) throws NotFoundException {
+        for (ProcedureVisits procedureVisits : procedureVisitsList) {
+            Visit visit = visitRepository.findByVisitID(procedureVisits.getVisitID())
+                    .orElseThrow(() -> new NotFoundException("Visit not found with ID: " + procedureVisits.getVisitID()));
+
+            procedureVisits.setClinicId(visit.getClinicId());
+            procedureVisits.setDoctorId(visit.getDoctorId());
+            procedureVisits.setPatientId(visit.getPatientId());
+            procedureVisits.setInsertTime(LocalDateTime.now());
+
+            procedureVisitsRepository.save(procedureVisits);
+        }
+    }
+
+
+    @Transactional
     public List<ProcedureVisits> getProceduresByPatientId(Long patientId) {
         return procedureVisitsRepository.findByVisit_PatientId(patientId);
     }

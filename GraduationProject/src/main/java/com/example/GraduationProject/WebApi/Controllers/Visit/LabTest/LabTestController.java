@@ -10,6 +10,7 @@ import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +37,18 @@ public class LabTestController extends SessionManagement {
         labTestService.addLabTest(labTest);
         return ResponseEntity.ok("Lab test added successfully");
     }
+
+    @PostMapping("/labtest/batch")
+    public ResponseEntity<String> addMultipleLabTests(@RequestBody List<LabTest> labTests, HttpServletRequest request)
+            throws UserNotFoundException, NotFoundException {
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        labTestService.addMultipleLabTests(labTests);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Multiple Lab Tests added successfully");
+    }
+
 
     /**
      * Get all lab tests for the logged-in patient.

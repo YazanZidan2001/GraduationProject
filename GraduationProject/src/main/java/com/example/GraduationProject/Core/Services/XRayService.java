@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class XRayService {
@@ -31,6 +33,22 @@ public class XRayService {
         xRay.setPatientId(visit.getPatientId());
         xRayRepository.save(xRay);
     }
+
+    @Transactional
+    public void addMultipleXRays(List<XRay> xRays) throws NotFoundException {
+        for (XRay xRay : xRays) {
+            Visit visit = visitRepository.findByVisitID(xRay.getVisitId())
+                    .orElseThrow(() -> new NotFoundException("Visit not found with ID: " + xRay.getVisitId()));
+
+            // Set clinic_id, doctor_id, patient_id from the Visit entity
+            xRay.setClinicId(visit.getClinicId());
+            xRay.setDoctorId(visit.getDoctorId());
+            xRay.setPatientId(visit.getPatientId());
+
+            xRayRepository.save(xRay);
+        }
+    }
+
 
     public PaginationDTO<XRay> getXRaysByPatientId(Long patientId, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
