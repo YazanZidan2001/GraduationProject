@@ -68,6 +68,7 @@ public class VisitController extends SessionManagement {
         return ResponseEntity.ok(visits);
     }
 
+
     /**
      * Get visits for a specific patient (accessible by doctors).
      */
@@ -90,9 +91,7 @@ public class VisitController extends SessionManagement {
 
 
 
-
-
-
+    
     /**
      * Get all visits for the logged-in patient.
      */
