@@ -97,15 +97,22 @@ public class UserController extends SessionManagement {
 
 
     @PostMapping("/changePassword")
-    public ResponseEntity<AuthenticationResponse> changePassword(@RequestParam String email,
-                                                                 @RequestParam String oldPassword,
-                                                                 @RequestParam String newPassword,
-                                                                 HttpServletRequest httpServletRequest) throws UserNotFoundException {
+    public ResponseEntity<AuthenticationResponse> changePassword(
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword,
+            HttpServletRequest httpServletRequest) throws UserNotFoundException {
+
+        // Extract token and user
         String token = service.extractToken(httpServletRequest);
         User user = service.extractUserFromToken(token);
+
+        // Validate that the logged-in user exists
         validateLoggedInAllUser(user);
-        AuthenticationResponse response = service.ChangePassword(email, oldPassword, newPassword);
+
+        // Call the service to change the password
+        AuthenticationResponse response = service.changePasswordForToken(user, oldPassword, newPassword);
         return ResponseEntity.ok(response);
     }
+
 
 }

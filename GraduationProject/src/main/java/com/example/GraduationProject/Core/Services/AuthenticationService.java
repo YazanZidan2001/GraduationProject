@@ -408,24 +408,32 @@ public class AuthenticationService extends SessionManagement {
 
 
     @Transactional
-    public AuthenticationResponse ChangePassword(String email, String oldPassword, String newPassword) throws UserNotFoundException {
-        var user = repository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    public AuthenticationResponse changePasswordForToken(User user, String oldPassword, String newPassword) throws UserNotFoundException {
+        // Verify the old password
         if (passwordEncoder.matches(oldPassword, user.getPassword())) {
+            // Update the user's password
             user.setPassword(passwordEncoder.encode(newPassword));
             var savedUser = repository.save(user);
-            var jwtToken = jwtService.generateToken(user);
-            var refreshToken = jwtService.generateRefreshToken(user);
+
+            // Generate new tokens
+            var jwtToken = jwtService.generateToken(savedUser);
+            var refreshToken = jwtService.generateRefreshToken(savedUser);
+
+            // Save the new token
             saveUserToken(savedUser, jwtToken);
+
+            // Return the updated response
             return AuthenticationResponse.builder()
                     .accessToken(jwtToken)
                     .refreshToken(refreshToken)
+                    .role(user.getRole())
                     .message("Password changed successfully")
                     .build();
         } else {
             throw new UserNotFoundException("Invalid old password");
         }
     }
+
 
 
     @Transactional
