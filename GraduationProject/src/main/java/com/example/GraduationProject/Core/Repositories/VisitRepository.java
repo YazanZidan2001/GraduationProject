@@ -43,5 +43,21 @@ public interface VisitRepository extends JpaRepository<Visit, VisitCompositeKey>
 
     Optional<Visit> findByVisitID(Long visitID);
 
+    @Query("SELECT v FROM Visit v " +
+            "JOIN v.patient p " +
+            "JOIN p.user u " +
+            "WHERE v.doctorId = :doctorId " +
+            "AND (:date IS NULL OR FUNCTION('MONTH', v.visitDate) = FUNCTION('MONTH', :date)) " +
+            "AND (:search IS NULL OR :search = '' OR " +
+            "CAST(p.patientId AS string) LIKE %:search% OR " +
+            "u.firstName LIKE %:search% OR " +
+            "u.lastName LIKE %:search% OR " +
+            "CONCAT(u.firstName, ' ', u.lastName) LIKE %:search% OR " +
+            "u.email LIKE %:search%)")
+    Page<Visit> findVisitsByDoctorWithFilters(@Param("doctorId") Long doctorId,
+                                              @Param("date") LocalDate date,
+                                              @Param("search") String search,
+                                              Pageable pageable);
+
 
 }

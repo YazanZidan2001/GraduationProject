@@ -58,11 +58,17 @@ public class VisitService {
     }
 
     @Transactional
-    public PaginationDTO<Visit> findVisitsByDoctor(Long doctorId, int page, int size) {
+    public PaginationDTO<Visit> findVisitsByDoctor(Long doctorId, LocalDate date, String search, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Visit> visits = visitRepository.findByDoctorId(doctorId, pageable);
+
+        // Call repository to fetch filtered results
+        Page<Visit> visits = visitRepository.findVisitsByDoctorWithFilters(doctorId, date, search, pageable);
+
+        // Map Page to PaginationDTO
         return mapToPaginationDTO(visits);
     }
+
+
 
     @Transactional
     public PaginationDTO<Visit> findVisitsByPatient(Long patientId, int page, int size) {
