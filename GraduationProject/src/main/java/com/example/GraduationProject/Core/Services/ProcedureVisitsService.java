@@ -62,4 +62,16 @@ public class ProcedureVisitsService {
     public List<ProcedureVisits> getAllProcedureVisits() {
         return procedureVisitsRepository.findAll();
     }
+
+    @Transactional(readOnly = true)
+    public List<ProcedureVisits> getProceduresByVisitId(Long visitID) throws NotFoundException {
+        // Fetch the visit entity
+        Visit visit = visitRepository.findByVisitID(visitID)
+                .orElseThrow(() -> new NotFoundException("Visit not found with ID: " + visitID));
+
+
+        // Fetch and return procedures by visit ID
+        return procedureVisitsRepository.findByVisitId(visitID);
+    }
+
 }

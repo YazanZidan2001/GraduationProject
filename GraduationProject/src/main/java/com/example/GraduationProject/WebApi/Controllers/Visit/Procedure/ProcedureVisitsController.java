@@ -2,6 +2,7 @@ package com.example.GraduationProject.WebApi.Controllers.Visit.Procedure;
 
 import com.example.GraduationProject.Common.Entities.ProcedureVisits;
 import com.example.GraduationProject.Common.Entities.User;
+import com.example.GraduationProject.Common.Enums.Role;
 import com.example.GraduationProject.Core.Services.ProcedureVisitsService;
 import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.SessionManagement;
@@ -86,4 +87,34 @@ public class ProcedureVisitsController extends SessionManagement {
         List<ProcedureVisits> procedureVisits = procedureVisitsService.getAllProcedureVisits();
         return ResponseEntity.ok(procedureVisits);
     }
+
+    /**
+     * Get all procedures by visit ID (accessible by doctors and patients).
+     */
+    @GetMapping("/visit/{visitID}/procedures")
+    public ResponseEntity<List<ProcedureVisits>> getProceduresByVisitId(
+            @PathVariable Long visitID,
+            HttpServletRequest request) throws UserNotFoundException, NotFoundException {
+        // Extract user from token
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+
+
+        // Validate the user role
+        validateLoggedInPatientAndDoctor(user);
+        // Determine whether the user is a doctor or patient
+        if (user.getRole() == Role.DOCTOR) {
+            Long doctorID = user.getUserID(); // Doctor's ID
+        } else if (user.getRole() == Role.PATIENT) {
+            Long patientID = user.getUserID(); // Patient's ID
+        }else {
+            throw new NotFoundException("Access denied. Only doctors or patients can view visits.");
+        }
+
+        // Fetch procedures by visit ID
+        List<ProcedureVisits> procedures = procedureVisitsService.getProceduresByVisitId(visitID);
+
+        return ResponseEntity.ok(procedures);
+    }
+
 }
