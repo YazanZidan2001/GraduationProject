@@ -136,4 +136,12 @@ public class VisitService {
         paginationDTO.setContent(page.getContent());
         return paginationDTO;
     }
+
+    @Transactional
+    public Visit findVisitByVisitIdForUser(Long visitID, Long doctorID, Long patientID) throws NotFoundException {
+        return visitRepository.findByVisitIdAndDoctorIdOrPatientId(visitID, doctorID, patientID)
+                .orElseThrow(() -> new NotFoundException("Visit not found or access denied."));
+    }
+
+
 }

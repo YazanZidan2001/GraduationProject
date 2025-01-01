@@ -3,6 +3,7 @@ package com.example.GraduationProject.WebApi.Controllers.Visit;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.User;
 import com.example.GraduationProject.Common.Entities.Visit;
+import com.example.GraduationProject.Common.Enums.Role;
 import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.Core.Services.DoctorClinicService;
 import com.example.GraduationProject.Core.Services.VisitService;
@@ -146,18 +147,36 @@ public class VisitController extends SessionManagement {
     /**
      * Get visits for a specific date for a doctor.
      */
-    @GetMapping("/doctor/{doctorID}/date")
-    public ResponseEntity<PaginationDTO<Visit>> getVisitsForDoctorByDate(
-            @PathVariable Long doctorID,
-            @RequestParam LocalDate date,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            HttpServletRequest request) throws UserNotFoundException {
+    /**
+     * Find a visit by visit ID for a doctor or patient.
+     */
+    @GetMapping("/visit/{visitID}")
+    public ResponseEntity<Visit> getVisitByVisitId(
+            @PathVariable Long visitID,
+            HttpServletRequest request) throws UserNotFoundException, NotFoundException {
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
-        validateLoggedInDoctor(user);
 
-        PaginationDTO<Visit> visits = visitService.findVisitsByDoctorAndDate(doctorID, date, page, size);
-        return ResponseEntity.ok(visits);
+        // Validate that the logged-in user is either a doctor or a patient
+        validateLoggedInPatientAndDoctor(user);
+
+        Long doctorID = null;
+        Long patientID = null;
+
+        // Determine whether the user is a doctor or patient
+        if (user.getRole() == Role.DOCTOR) {
+            doctorID = user.getUserID(); // Doctor's ID
+        } else if (user.getRole() == Role.PATIENT) {
+            patientID = user.getUserID(); // Patient's ID
+        }else {
+            throw new NotFoundException("Access denied. Only doctors or patients can view visits.");
+        }
+
+        // Call the service method to fetch the visit
+        Visit visit = visitService.findVisitByVisitIdForUser(visitID, doctorID, patientID);
+        return ResponseEntity.ok(visit);
     }
+
+
+
 }

@@ -1,6 +1,5 @@
 package com.example.GraduationProject.Core.Repositories;
 
-import com.example.GraduationProject.Common.Entities.Appointment;
 import com.example.GraduationProject.Common.Entities.Visit;
 import com.example.GraduationProject.Common.CompositeKey.VisitCompositeKey;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -60,6 +59,14 @@ public interface VisitRepository extends JpaRepository<Visit, VisitCompositeKey>
                                               @Param("year") Integer year,
                                               @Param("search") String search,
                                               Pageable pageable);
+
+    @Query("SELECT v FROM Visit v " +
+            "WHERE v.visitID = :visitID " +
+            "AND (:doctorID IS NULL OR v.doctorId = :doctorID) " +
+            "AND (:patientID IS NULL OR v.patientId = :patientID)")
+    Optional<Visit> findByVisitIdAndDoctorIdOrPatientId(@Param("visitID") Long visitID,
+                                                        @Param("doctorID") Long doctorID,
+                                                        @Param("patientID") Long patientID);
 
 
 
