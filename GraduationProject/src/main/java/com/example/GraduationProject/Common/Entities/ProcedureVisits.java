@@ -69,11 +69,11 @@ public class ProcedureVisits {
     })
     private Visit visit;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "procedure_name", insertable = false, updatable = false)
     private ProcedureMaster procedureMaster;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
 }
