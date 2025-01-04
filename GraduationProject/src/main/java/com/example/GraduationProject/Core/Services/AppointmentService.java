@@ -2,10 +2,7 @@ package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.Common.CompositeKey.AppointmentCompositeKey;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
-import com.example.GraduationProject.Common.Entities.Appointment;
-import com.example.GraduationProject.Common.Entities.Clinic;
-import com.example.GraduationProject.Common.Entities.DoctorClinic;
-import com.example.GraduationProject.Common.Entities.ScheduleWorkTime;
+import com.example.GraduationProject.Common.Entities.*;
 import com.example.GraduationProject.Common.Enums.DaysOfWeek;
 import com.example.GraduationProject.Core.Repositories.AppointmentRepository;
 import com.example.GraduationProject.Core.Repositories.ClinicRepository;
@@ -45,12 +42,19 @@ public class AppointmentService {
         String appointmentTime = appointment.getAppointmentTime();
 
         // Check if the appointment slot is already reserved
-        boolean isReserved = appointmentRepository.existsByDoctorIDAndAppointmentDateAndTime(
+        boolean isReserved = appointmentRepository.existsByDoctorIDAndAppointmentDateAndTimeAndIsCancelledFalse(
                 doctorID, clinicID, appointmentDate, appointmentTime);
 
         if (isReserved) {
             throw new IllegalArgumentException("The selected time slot is already reserved.");
         }
+
+        Long lastAppointmentID = appointmentRepository.findTopByOrderByAppointmentIDDesc()
+                .map(Appointment::getAppointmentID)
+                .orElse(0L); // Default to 0 if no visits exist
+
+        // Set the new visit ID
+        appointment.setAppointmentID(lastAppointmentID + 1);
 
         // Verify the clinic exists
         Clinic clinic = clinicRepository.findById(clinicID)
@@ -296,8 +300,8 @@ public class AppointmentService {
             LocalTime slotEnd = slotStart.plusMinutes(interval);
             String timeRange = slotStart + " - " + slotEnd;
 
-            // Check if this time slot is reserved
-            boolean isReserved = appointmentRepository.existsByDoctorIDAndAppointmentDateAndTime(
+            // Check if this time slot is reserved and not canceled
+            boolean isReserved = appointmentRepository.existsByDoctorIDAndAppointmentDateAndTimeAndIsCancelledFalse(
                     doctorID, clinicID, date, timeRange);
 
             slots.add(timeRange + (isReserved ? " (Reserved)" : " (Available)"));
@@ -306,6 +310,7 @@ public class AppointmentService {
 
         return slots;
     }
+
 
 
 

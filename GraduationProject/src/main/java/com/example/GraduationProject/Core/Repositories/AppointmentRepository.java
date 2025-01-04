@@ -2,6 +2,7 @@ package com.example.GraduationProject.Core.Repositories;
 
 import com.example.GraduationProject.Common.Entities.Appointment;
 import com.example.GraduationProject.Common.CompositeKey.AppointmentCompositeKey;
+import com.example.GraduationProject.Common.Entities.Visit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -85,6 +86,23 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Appoin
             @Param("clinicID") Long clinicID,
             @Param("date") LocalDate date,
             @Param("time") String time);
+
+
+    /**
+     * Check if a non-canceled appointment exists for a specific doctor, date, and time.
+     */
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
+            "FROM Appointment a " +
+            "WHERE a.doctorID = :doctorID AND a.clinicID = :clinicID AND a.appointmentDate = :date AND a.appointmentTime = :time " +
+            "AND a.isCancelled = false")
+    boolean existsByDoctorIDAndAppointmentDateAndTimeAndIsCancelledFalse(
+            @Param("doctorID") Long doctorID,
+            @Param("clinicID") Long clinicID,
+            @Param("date") LocalDate date,
+            @Param("time") String time);
+
+
+    Optional<Appointment> findTopByOrderByAppointmentIDDesc();
 
 
 
