@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("appointments")
@@ -29,14 +30,6 @@ public class AppointmentController extends SessionManagement {
     private final DoctorClinicRepository doctorClinicRepository;
     private final AppointmentRepository appointmentRepository;
 
-    @PostMapping
-    public ResponseEntity<String> addAppointment(@RequestBody Appointment appointment, HttpServletRequest request) throws UserNotFoundException, NotFoundException {
-        String token = authenticationService.extractToken(request);
-        User user = authenticationService.extractUserFromToken(token);
-        validateLoggedInDoctor(user);
-        appointmentService.addAppointment(appointment);
-        return ResponseEntity.ok("Appointment added successfully");
-    }
 
     @PostMapping("/appointment/doctor")
     public ResponseEntity<String> addAppointmentByDoctor(
@@ -117,18 +110,18 @@ public class AppointmentController extends SessionManagement {
         return ResponseEntity.ok(appointment);
     }
 
-    @GetMapping("/doctor/{doctorID}")
-    public ResponseEntity<PaginationDTO<Appointment>> getAppointmentsByDoctorID(
-            @PathVariable Long doctorID,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            HttpServletRequest request) throws UserNotFoundException {
-        String token = authenticationService.extractToken(request);
-        User user = authenticationService.extractUserFromToken(token);
-        validateLoggedInDoctor(user);
-        PaginationDTO<Appointment> appointments = appointmentService.findByDoctorID(doctorID, page, size);
-        return ResponseEntity.ok(appointments);
-    }
+//    @GetMapping("/doctor/{doctorID}")
+//    public ResponseEntity<PaginationDTO<Appointment>> getAppointmentsByDoctorID(
+//            @PathVariable Long doctorID,
+//            @RequestParam(defaultValue = "1") int page,
+//            @RequestParam(defaultValue = "10") int size,
+//            HttpServletRequest request) throws UserNotFoundException {
+//        String token = authenticationService.extractToken(request);
+//        User user = authenticationService.extractUserFromToken(token);
+//        validateLoggedInDoctor(user);
+//        PaginationDTO<Appointment> appointments = appointmentService.findByDoctorID(doctorID, page, size);
+//        return ResponseEntity.ok(appointments);
+//    }
 
     @GetMapping("/patient/{patientID}")
     public ResponseEntity<PaginationDTO<Appointment>> getAppointmentsByPatientID(
@@ -379,4 +372,47 @@ public class AppointmentController extends SessionManagement {
         PaginationDTO<Appointment> appointments = appointmentService.getAllAppointments(page, size);
         return ResponseEntity.ok(appointments);
     }
+
+
+    @PostMapping
+    public ResponseEntity<String> addAppointment(@RequestBody Appointment appointment, HttpServletRequest request) throws UserNotFoundException, NotFoundException {
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        appointmentService.addAppointment(appointment);
+        return ResponseEntity.ok("Appointment added successfully");
+    }
+
+    @GetMapping("/slots")
+    public ResponseEntity<List<String>> getAvailableSlots(
+            @RequestParam Long doctorID,
+            @RequestParam LocalDate date,
+            HttpServletRequest request) throws UserNotFoundException, NotFoundException {
+
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInPatientAndDoctor(user);
+
+        List<String> slots = appointmentService.getAvailableSlots(doctorID, date);
+        return ResponseEntity.ok(slots);
+    }
+
+    @GetMapping("/doctor/{doctorID}")
+    public ResponseEntity<PaginationDTO<Appointment>> getAppointmentsByDoctorAndDate(
+            @PathVariable Long doctorID,
+            @RequestParam LocalDate date,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) throws UserNotFoundException {
+
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        PaginationDTO<Appointment> appointments = appointmentService.getAppointmentsByDoctorAndDate(doctorID, date, page, size);
+        return ResponseEntity.ok(appointments);
+    }
+
+
 }

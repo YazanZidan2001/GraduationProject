@@ -93,4 +93,19 @@ public class DoctorClinicController extends SessionManagement {
 
         return doctorClinicService.getAllDoctorClinics(page, size);
     }
+
+    @PutMapping("/{doctorId}/{clinicId}/update-interval")
+    public ResponseEntity<String> updateDoctorInterval(
+            @PathVariable Long doctorId,
+            @PathVariable Long clinicId,
+            @RequestParam Integer interval,
+            HttpServletRequest request) throws UserNotFoundException, DoctorClinicNotFoundException {
+        String token = service.extractToken(request);
+        User user = service.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        doctorClinicService.updateDoctorInterval(doctorId, clinicId, interval);
+        return ResponseEntity.ok("Interval updated successfully");
+    }
+
 }

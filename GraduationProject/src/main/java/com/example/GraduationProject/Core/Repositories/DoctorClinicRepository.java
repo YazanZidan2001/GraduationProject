@@ -25,4 +25,7 @@ public interface DoctorClinicRepository extends JpaRepository<DoctorClinic, Doct
 
     Optional<DoctorClinic> findByDoctorIdAndClinicId(Long doctorId, Long clinicId);
 
+    @Query("SELECT dc FROM DoctorClinic dc WHERE dc.doctorId = :doctorId AND dc.isActive = true")
+    Optional<DoctorClinic> findByDoctorIdAndIsActiveTrue(@Param("doctorId") Long doctorId);
+
 }

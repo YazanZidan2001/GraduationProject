@@ -5,9 +5,12 @@ import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.Appointment;
 import com.example.GraduationProject.Common.Entities.Clinic;
 import com.example.GraduationProject.Common.Entities.DoctorClinic;
+import com.example.GraduationProject.Common.Entities.ScheduleWorkTime;
+import com.example.GraduationProject.Common.Enums.DaysOfWeek;
 import com.example.GraduationProject.Core.Repositories.AppointmentRepository;
 import com.example.GraduationProject.Core.Repositories.ClinicRepository;
 import com.example.GraduationProject.Core.Repositories.DoctorClinicRepository;
+import com.example.GraduationProject.Core.Repositories.ScheduleWorkTimeRepository;
 import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -18,22 +21,45 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class AppointmentService {
+
+
     private final AppointmentRepository appointmentRepository;
     private  final ClinicRepository  clinicRepository;
     private final AppointmentNotificationService AppNotificationService;
     @Autowired
     private DoctorClinicRepository doctorClinicRepository;
+    private final ScheduleWorkTimeRepository scheduleWorkTimeRepository;
+
     @Transactional
     public void addAppointment(Appointment appointment) throws NotFoundException {
+        Long doctorID = appointment.getDoctorID();
         Long clinicID = appointment.getClinicID();
+        LocalDate appointmentDate = appointment.getAppointmentDate();
+        String appointmentTime = appointment.getAppointmentTime();
+
+        // Check if the appointment slot is already reserved
+        boolean isReserved = appointmentRepository.existsByDoctorIDAndAppointmentDateAndTime(
+                doctorID, clinicID, appointmentDate, appointmentTime);
+
+        if (isReserved) {
+            throw new IllegalArgumentException("The selected time slot is already reserved.");
+        }
+
+        // Verify the clinic exists
         Clinic clinic = clinicRepository.findById(clinicID)
                 .orElseThrow(() -> new NotFoundException("Clinic not found with ID: " + clinicID));
 
+        // Set the clinic in the appointment
         appointment.setClinic(clinic);
+
+        // Save the appointment
         appointmentRepository.save(appointment);
 
         // Create a notification for this appointment
@@ -41,15 +67,11 @@ public class AppointmentService {
     }
 
 
-
-
-
     @Transactional
     public void updateAppointment(Appointment appointment, Long appointmentID, Long doctorID, Long patientID, Long clinicID) throws NotFoundException {
         AppointmentCompositeKey id = new AppointmentCompositeKey(appointmentID, doctorID, patientID, clinicID);
         Appointment existingAppointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Appointment not found with Appointment ID: " + appointmentID
-                        + ", Doctor ID: " + doctorID + ", Patient ID: " + patientID + ", and Clinic ID: " + clinicID));
+                .orElseThrow(() -> new NotFoundException("Appointment not found with provided IDs"));
 
         existingAppointment.setAppointmentDate(appointment.getAppointmentDate());
         existingAppointment.setAppointmentTime(appointment.getAppointmentTime());
@@ -214,6 +236,75 @@ public class AppointmentService {
 
         appointment.setIsDone(true);
         appointmentRepository.save(appointment);
+    }
+
+
+
+
+    @Transactional
+    public PaginationDTO<Appointment> getAppointmentsByDoctorAndDate(Long doctorID, LocalDate date, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Appointment> appointments = appointmentRepository.findByDoctorIDAndAppointmentDate(doctorID, date, pageable);
+        return mapToPaginationDTO(appointments);
+    }
+
+    @Transactional
+    public List<String> getAvailableSlots(Long doctorID, LocalDate date) throws NotFoundException {
+        // Fetch the active clinic and time interval for the doctor
+        DoctorClinic doctorClinic = doctorClinicRepository.findByDoctorIdAndIsActiveTrue(doctorID)
+                .orElseThrow(() -> new NotFoundException("Doctor is not associated with any active clinic"));
+
+        Long clinicID = doctorClinic.getClinicId();
+        Integer interval = doctorClinic.getTimeInterval();
+
+        if (interval == null || interval <= 0) {
+            throw new IllegalArgumentException("Invalid time interval configured for the doctor in the clinic");
+        }
+
+        // Fetch the schedule for the doctor and clinic
+        ScheduleWorkTime schedule = scheduleWorkTimeRepository.findScheduleByDoctorAndClinic(doctorID, clinicID)
+                .orElseThrow(() -> new NotFoundException("Schedule not found for the given doctor and clinic"));
+
+        // Validate if the provided date matches the schedule
+        validateDateWithSchedule(date, schedule);
+
+        // Generate and return slots
+        return generateSlots(doctorID, clinicID, date, schedule, interval);
+    }
+
+    private void validateDateWithSchedule(LocalDate date, ScheduleWorkTime schedule) throws NotFoundException {
+        // Check if the day of the week matches the schedule
+        String dayOfWeek = date.getDayOfWeek().name();
+        if (!schedule.getDaysOfWeek().contains(dayOfWeek)) {
+            throw new NotFoundException("Schedule not found for the given date");
+        }
+
+        // Check if the date falls within the schedule's range
+        if (date.isBefore(schedule.getFromDate()) ||
+                (schedule.getToDate() != null && date.isAfter(schedule.getToDate()))) {
+            throw new NotFoundException("Schedule not found for the given date");
+        }
+    }
+
+
+    private List<String> generateSlots(Long doctorID, Long clinicID, LocalDate date, ScheduleWorkTime schedule, Integer interval) {
+        List<String> slots = new ArrayList<>();
+        LocalTime slotStart = schedule.getStartTime();
+        LocalTime endTime = schedule.getEndTime();
+
+        while (slotStart.isBefore(endTime)) {
+            LocalTime slotEnd = slotStart.plusMinutes(interval);
+            String timeRange = slotStart + " - " + slotEnd;
+
+            // Check if this time slot is reserved
+            boolean isReserved = appointmentRepository.existsByDoctorIDAndAppointmentDateAndTime(
+                    doctorID, clinicID, date, timeRange);
+
+            slots.add(timeRange + (isReserved ? " (Reserved)" : " (Available)"));
+            slotStart = slotEnd;
+        }
+
+        return slots;
     }
 
 

@@ -1,0 +1,38 @@
+package com.example.GraduationProject.Core.Repositories;
+
+import com.example.GraduationProject.Common.Entities.ScheduleWorkTime;
+import com.example.GraduationProject.Common.CompositeKey.DoctorClinicId;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ScheduleWorkTimeRepository extends JpaRepository<ScheduleWorkTime, DoctorClinicId> {
+
+    @Query("SELECT s FROM ScheduleWorkTime s WHERE s.doctorId = :doctorId AND " +
+            "(:date IS NULL OR (s.fromDate <= :date AND (s.toDate IS NULL OR s.toDate >= :date)))")
+    Optional<ScheduleWorkTime> findByDoctorIdAndDate(@Param("doctorId") Long doctorId, @Param("date") LocalDate date);
+
+    @Query("SELECT s FROM ScheduleWorkTime s WHERE s.doctorId = :doctorId AND s.clinicId = :clinicId")
+    List<ScheduleWorkTime> findByDoctorIdAndClinicId(@Param("doctorId") Long doctorId, @Param("clinicId") Long clinicId);
+
+    /**
+     * Find the schedule for a specific doctor on a given date.
+     */
+    @Query("SELECT s FROM ScheduleWorkTime s WHERE s.doctorId = :doctorId " +
+            "AND (s.fromDate <= :date AND (s.toDate IS NULL OR s.toDate >= :date))")
+    Optional<ScheduleWorkTime> findScheduleByDoctorAndDate(@Param("doctorId") Long doctorId, @Param("date") LocalDate date);
+
+
+    @Query("SELECT s FROM ScheduleWorkTime s WHERE s.doctorId = :doctorID AND s.clinicId = :clinicID")
+    Optional<ScheduleWorkTime> findScheduleByDoctorAndClinic(@Param("doctorID") Long doctorID, @Param("clinicID") Long clinicID);
+
+    Optional<ScheduleWorkTime> findTopByOrderByIdDesc();
+
+
+}

@@ -13,5 +13,5 @@ import java.util.List;
 public interface AppointmentNotificationRepository extends JpaRepository<AppointmentNotification, AppointmentCompositeKey> {
 
     // Find notifications that need to be sent (date and time is 24 hours from now)
-    List<AppointmentNotification> findByDateAndTimeAndIsSendFalse(LocalDate date, LocalTime time);
+    List<AppointmentNotification> findByDateAndTimeAndIsSendFalse(LocalDate date, String time);
 }

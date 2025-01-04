@@ -55,7 +55,7 @@ public class Appointment {
 
     @Column(name = "appointment_time", nullable = false)
     @NotNull(message = "Appointment time cannot be blank")
-    private LocalTime appointmentTime;
+    private String appointmentTime;
 
     @Column(name = "appointment_date", nullable = false)
     @NotNull(message = "Appointment date cannot be blank")

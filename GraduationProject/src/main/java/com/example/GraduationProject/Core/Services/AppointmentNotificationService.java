@@ -33,18 +33,18 @@ public class AppointmentNotificationService {
     }
 
     // This will run every hour to check for notifications to be sent
-    @Scheduled(fixedRate = 3600000)
-    public void sendNotifications() {
-        LocalDate targetDate = LocalDate.now().plusDays(1);
-        LocalTime targetTime = LocalTime.now();
-
-        List<AppointmentNotification> notifications = notificationRepository
-                .findByDateAndTimeAndIsSendFalse(targetDate, targetTime);
-
-        for (AppointmentNotification notification : notifications) {
-            // Send notification logic here (email, SMS, etc.)
-            notification.setIsSend(true);
-            notificationRepository.save(notification);
-        }
-    }
+//    @Scheduled(fixedRate = 3600000)
+//    public void sendNotifications() {
+//        LocalDate targetDate = LocalDate.now().plusDays(1);
+//        String targetTime = LocalTime.now();
+//
+//        List<AppointmentNotification> notifications = notificationRepository
+//                .findByDateAndTimeAndIsSendFalse(targetDate, targetTime);
+//
+//        for (AppointmentNotification notification : notifications) {
+//            // Send notification logic here (email, SMS, etc.)
+//            notification.setIsSend(true);
+//            notificationRepository.save(notification);
+//        }
+//    }
 }

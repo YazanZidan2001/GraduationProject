@@ -28,23 +28,18 @@ public class DoctorClinic {
     @Id
     @Column(name = "clinic_id")
     @NotNull(message = "Clinic ID cannot be blank")
-    private Long clinicId; // Changed to Long for consistency
+    private Long clinicId;
 
-    @Column(name = "start_date")
-    @NotNull(message = "Start date cannot be blank")
-    private LocalDate startDate;
+    @Column(name = "is_need_interval", nullable = true)
+    @Builder.Default
+    private boolean isNeedInterval= true;
 
-    @Column(name = "end_date")
-    @NotNull(message = "End date cannot be blank")
-    private LocalDate endDate;
+    @Column(name = "time_interval", nullable = true)
+    private Integer timeInterval;
 
-    @Column(name = "start_time")
-    @NotNull(message = "start time cannot be blank")
-    private LocalTime startTime;
-
-    @Column(name = "end_time")
-    @NotNull(message = "end time cannot be blank")
-    private LocalTime endTime;
+    @Column(name = "is_Active", nullable = true)
+    @Builder.Default
+    private boolean isActive = true;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "doctor_id", insertable = false, updatable = false)

@@ -39,7 +39,7 @@ public class AppointmentNotification {
     private LocalDate date;
 
     @Column(name = "time", nullable = false)
-    private LocalTime time;
+    private String time;
 
     @Column(name = "is_send", nullable = false)
     private Boolean isSend = false;

@@ -6,8 +6,8 @@ import com.example.GraduationProject.Core.Repositories.ProcedureVisitsRepository
 import com.example.GraduationProject.Core.Repositories.VisitRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;

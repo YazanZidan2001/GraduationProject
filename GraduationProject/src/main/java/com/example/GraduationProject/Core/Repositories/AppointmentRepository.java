@@ -74,4 +74,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Appoin
     Optional<Appointment> findAppointmentByIdAndDoctorID(@Param("appointmentID") Long appointmentID, @Param("doctorID") Long doctorID);
 
 
+    /**
+     * Check if an appointment exists for a specific doctor, date, and time.
+     */
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
+            "FROM Appointment a " +
+            "WHERE a.doctorID = :doctorID AND a.clinicID = :clinicID AND a.appointmentDate = :date AND a.appointmentTime = :time")
+    boolean existsByDoctorIDAndAppointmentDateAndTime(
+            @Param("doctorID") Long doctorID,
+            @Param("clinicID") Long clinicID,
+            @Param("date") LocalDate date,
+            @Param("time") String time);
+
+
+
 }

@@ -25,8 +25,20 @@ public class DoctorClinicService {
 
     @Transactional
     public void addDoctorClinic(DoctorClinic doctorClinic) {
+        doctorClinic.setNeedInterval(true); // Default to true
+        doctorClinic.setActive(true);      // Default to true
+        doctorClinic.setTimeInterval(0);       // Default to no interval
         doctorClinicRepository.save(doctorClinic);
     }
+
+    @Transactional
+    public void updateDoctorInterval(Long doctorId, Long clinicId, Integer newInterval) throws DoctorClinicNotFoundException {
+        DoctorClinic doctorClinic = doctorClinicRepository.findByDoctorIdAndClinicId(doctorId, clinicId)
+                .orElseThrow(() -> new DoctorClinicNotFoundException("DoctorClinic not found with Doctor ID: " + doctorId + " and Clinic ID: " + clinicId));
+        doctorClinic.setTimeInterval(newInterval);
+        doctorClinicRepository.save(doctorClinic);
+    }
+
 
     public List<Long> getClinicIdsByDoctorId(Long doctorId) {
         return doctorClinicRepository.findClinicIdsByDoctorId(doctorId);
@@ -42,8 +54,7 @@ public class DoctorClinicService {
         DoctorClinic existingDoctorClinic = doctorClinicRepository.findById(id)
                 .orElseThrow(() -> new DoctorClinicNotFoundException("DoctorClinic not found with Doctor ID: " + doctorId + " and Clinic ID: " + clinicId));
 
-        existingDoctorClinic.setStartDate(doctorClinic.getStartDate());
-        existingDoctorClinic.setEndDate(doctorClinic.getEndDate());
+
 
         doctorClinicRepository.save(existingDoctorClinic);
     }
