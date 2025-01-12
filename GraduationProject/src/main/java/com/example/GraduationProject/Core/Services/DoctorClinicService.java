@@ -32,9 +32,13 @@ public class DoctorClinicService {
     }
 
     @Transactional
-    public void updateDoctorInterval(Long doctorId, Long clinicId, Integer newInterval) throws DoctorClinicNotFoundException {
+    public void updateDoctorInterval(Long doctorId, Integer newInterval) throws DoctorClinicNotFoundException {
+        Long clinicId = doctorClinicRepository.findClinicIdByDoctorId(doctorId)
+                .orElseThrow(() -> new DoctorClinicNotFoundException("No clinic found for Doctor ID: " + doctorId));
+
         DoctorClinic doctorClinic = doctorClinicRepository.findByDoctorIdAndClinicId(doctorId, clinicId)
                 .orElseThrow(() -> new DoctorClinicNotFoundException("DoctorClinic not found with Doctor ID: " + doctorId + " and Clinic ID: " + clinicId));
+
         doctorClinic.setTimeInterval(newInterval);
         doctorClinicRepository.save(doctorClinic);
     }
