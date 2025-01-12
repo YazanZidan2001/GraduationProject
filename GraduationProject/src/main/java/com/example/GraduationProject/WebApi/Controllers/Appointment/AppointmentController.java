@@ -389,19 +389,22 @@ public class AppointmentController extends SessionManagement {
             List<String> slots = appointmentService.getAvailableSlots(doctorID, date);
 
             if (slots.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                return ResponseEntity.status(HttpStatus.OK)
                         .body("No available slots for the given date");
             }
 
             return ResponseEntity.ok(slots);
-        } catch (NotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ex.getMessage());
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An error occurred while fetching available slots: " + ex.getMessage());
         }
     }
+
+
 
 
 

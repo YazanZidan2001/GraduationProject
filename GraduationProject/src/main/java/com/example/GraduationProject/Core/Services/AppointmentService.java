@@ -253,10 +253,10 @@ public class AppointmentService {
     }
 
     @Transactional
-    public List<String> getAvailableSlots(Long doctorID, LocalDate date) throws NotFoundException {
+    public List<String> getAvailableSlots(Long doctorID, LocalDate date) {
         // Fetch the active clinic and time interval for the doctor
         DoctorClinic doctorClinic = doctorClinicRepository.findByDoctorIdAndIsActiveTrue(doctorID)
-                .orElseThrow(() -> new NotFoundException("Doctor is not associated with any active clinic"));
+                .orElseThrow(() -> new IllegalArgumentException("Doctor is not associated with any active clinic"));
 
         Long clinicID = doctorClinic.getClinicId();
         Integer interval = doctorClinic.getTimeInterval();
@@ -267,36 +267,35 @@ public class AppointmentService {
 
         // Fetch the schedule for the doctor and clinic
         ScheduleWorkTime schedule = scheduleWorkTimeRepository.findScheduleByDoctorAndClinic(doctorID, clinicID)
-                .orElseThrow(() -> new NotFoundException("Schedule not found for the given doctor and clinic"));
+                .orElseThrow(() -> new IllegalArgumentException("Schedule not found for the given doctor and clinic"));
 
         // Validate if the provided date matches the schedule
-        validateDateWithSchedule(date, schedule);
-
-        // Generate slots
-        List<String> slots = generateSlots(doctorID, clinicID, date, schedule, interval);
-
-        // If no slots are available, throw an exception
-        if (slots.isEmpty()) {
-            throw new NotFoundException("No available slots for the given date");
+        String validationMessage = validateDateWithSchedule(date, schedule);
+        if (validationMessage != null) {
+            throw new IllegalArgumentException(validationMessage);
         }
 
-        return slots;
+        // Generate slots
+        return generateSlots(doctorID, clinicID, date, schedule, interval);
     }
 
 
 
-    private void validateDateWithSchedule(LocalDate date, ScheduleWorkTime schedule) throws NotFoundException {
+
+    private String validateDateWithSchedule(LocalDate date, ScheduleWorkTime schedule) {
         // Check if the day of the week matches the schedule
         DaysOfWeek dayOfWeek = DaysOfWeek.valueOf(date.getDayOfWeek().name());
         if (!schedule.getDaysOfWeek().contains(dayOfWeek)) {
-            throw new NotFoundException("Schedule not found for the given date");
+            return "The provided date does not match the schedule";
         }
 
         // Check if the date falls within the schedule's range
         if (date.isBefore(schedule.getFromDate()) ||
                 (schedule.getToDate() != null && date.isAfter(schedule.getToDate()))) {
-            throw new NotFoundException("Schedule not found for the given date");
+            return "The provided date does not match the schedule";
         }
+
+        return null; // The date is valid
     }
 
 
