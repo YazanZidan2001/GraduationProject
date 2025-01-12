@@ -1,6 +1,7 @@
 package com.example.GraduationProject.Common.Entities;
 
 import com.example.GraduationProject.Common.CompositeKey.DoctorClinicId;
+import com.example.GraduationProject.Common.CompositeKey.ScheduleWorkTimeId;
 import com.example.GraduationProject.Common.Enums.DaysOfWeek;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,11 +25,14 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Entity
 @Table(name = "Schedule_work_time")
-@IdClass(DoctorClinicId.class)
+@IdClass(ScheduleWorkTimeId.class)
 public class ScheduleWorkTime {
 
 
-    private  Long id;
+    @Id
+    @Column(name = "schedule_id")
+    @NotNull(message = "scheduleI ID cannot be blank")
+    private Long scheduleId;
 
     @Id
     @Column(name = "doctor_id")
@@ -40,9 +44,10 @@ public class ScheduleWorkTime {
     @NotNull(message = "Clinic ID cannot be blank")
     private Long clinicId;
 
-    @Column(name = "days_of_week", nullable = false)
-    @NotNull(message = "Days Of Week cannot be blank")
-    private List<String> daysOfWeek;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week", nullable = false)
+    @NotNull(message = "Days of Week cannot be blank")
+    private List<DaysOfWeek> daysOfWeek;
 
 
     @Column(name = "start_time")

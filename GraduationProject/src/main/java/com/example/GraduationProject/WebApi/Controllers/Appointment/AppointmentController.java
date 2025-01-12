@@ -110,18 +110,7 @@ public class AppointmentController extends SessionManagement {
         return ResponseEntity.ok(appointment);
     }
 
-//    @GetMapping("/doctor/{doctorID}")
-//    public ResponseEntity<PaginationDTO<Appointment>> getAppointmentsByDoctorID(
-//            @PathVariable Long doctorID,
-//            @RequestParam(defaultValue = "1") int page,
-//            @RequestParam(defaultValue = "10") int size,
-//            HttpServletRequest request) throws UserNotFoundException {
-//        String token = authenticationService.extractToken(request);
-//        User user = authenticationService.extractUserFromToken(token);
-//        validateLoggedInDoctor(user);
-//        PaginationDTO<Appointment> appointments = appointmentService.findByDoctorID(doctorID, page, size);
-//        return ResponseEntity.ok(appointments);
-//    }
+
 
     @GetMapping("/patient/{patientID}")
     public ResponseEntity<PaginationDTO<Appointment>> getAppointmentsByPatientID(
@@ -385,18 +374,36 @@ public class AppointmentController extends SessionManagement {
     }
 
     @GetMapping("/slots")
-    public ResponseEntity<List<String>> getAvailableSlots(
+    public ResponseEntity<?> getAvailableSlots(
             @RequestParam Long doctorID,
             @RequestParam LocalDate date,
-            HttpServletRequest request) throws UserNotFoundException, NotFoundException {
+            HttpServletRequest request) throws UserNotFoundException {
 
+        // Validate the logged-in user
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatientAndDoctor(user);
 
-        List<String> slots = appointmentService.getAvailableSlots(doctorID, date);
-        return ResponseEntity.ok(slots);
+        try {
+            // Fetch available slots
+            List<String> slots = appointmentService.getAvailableSlots(doctorID, date);
+
+            if (slots.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("No available slots for the given date");
+            }
+
+            return ResponseEntity.ok(slots);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while fetching available slots: " + ex.getMessage());
+        }
     }
+
+
 
     @GetMapping("/doctor/{doctorID}")
     public ResponseEntity<PaginationDTO<Appointment>> getAppointmentsByDoctorAndDate(

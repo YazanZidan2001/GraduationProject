@@ -272,13 +272,22 @@ public class AppointmentService {
         // Validate if the provided date matches the schedule
         validateDateWithSchedule(date, schedule);
 
-        // Generate and return slots
-        return generateSlots(doctorID, clinicID, date, schedule, interval);
+        // Generate slots
+        List<String> slots = generateSlots(doctorID, clinicID, date, schedule, interval);
+
+        // If no slots are available, throw an exception
+        if (slots.isEmpty()) {
+            throw new NotFoundException("No available slots for the given date");
+        }
+
+        return slots;
     }
+
+
 
     private void validateDateWithSchedule(LocalDate date, ScheduleWorkTime schedule) throws NotFoundException {
         // Check if the day of the week matches the schedule
-        String dayOfWeek = date.getDayOfWeek().name();
+        DaysOfWeek dayOfWeek = DaysOfWeek.valueOf(date.getDayOfWeek().name());
         if (!schedule.getDaysOfWeek().contains(dayOfWeek)) {
             throw new NotFoundException("Schedule not found for the given date");
         }
@@ -289,6 +298,7 @@ public class AppointmentService {
             throw new NotFoundException("Schedule not found for the given date");
         }
     }
+
 
 
     private List<String> generateSlots(Long doctorID, Long clinicID, LocalDate date, ScheduleWorkTime schedule, Integer interval) {
@@ -310,6 +320,7 @@ public class AppointmentService {
 
         return slots;
     }
+
 
 
 

@@ -1,7 +1,7 @@
 package com.example.GraduationProject.Core.Repositories;
 
 import com.example.GraduationProject.Common.Entities.ScheduleWorkTime;
-import com.example.GraduationProject.Common.CompositeKey.DoctorClinicId;
+import com.example.GraduationProject.Common.CompositeKey.ScheduleWorkTimeId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ScheduleWorkTimeRepository extends JpaRepository<ScheduleWorkTime, DoctorClinicId> {
+public interface ScheduleWorkTimeRepository extends JpaRepository<ScheduleWorkTime, ScheduleWorkTimeId> {
 
     @Query("SELECT s FROM ScheduleWorkTime s WHERE s.doctorId = :doctorId AND " +
             "(:date IS NULL OR (s.fromDate <= :date AND (s.toDate IS NULL OR s.toDate >= :date)))")
@@ -21,18 +21,13 @@ public interface ScheduleWorkTimeRepository extends JpaRepository<ScheduleWorkTi
     @Query("SELECT s FROM ScheduleWorkTime s WHERE s.doctorId = :doctorId AND s.clinicId = :clinicId")
     List<ScheduleWorkTime> findByDoctorIdAndClinicId(@Param("doctorId") Long doctorId, @Param("clinicId") Long clinicId);
 
-    /**
-     * Find the schedule for a specific doctor on a given date.
-     */
     @Query("SELECT s FROM ScheduleWorkTime s WHERE s.doctorId = :doctorId " +
             "AND (s.fromDate <= :date AND (s.toDate IS NULL OR s.toDate >= :date))")
     Optional<ScheduleWorkTime> findScheduleByDoctorAndDate(@Param("doctorId") Long doctorId, @Param("date") LocalDate date);
 
+    Optional<ScheduleWorkTime> findTopByOrderByScheduleIdDesc();
 
-    @Query("SELECT s FROM ScheduleWorkTime s WHERE s.doctorId = :doctorID AND s.clinicId = :clinicID")
-    Optional<ScheduleWorkTime> findScheduleByDoctorAndClinic(@Param("doctorID") Long doctorID, @Param("clinicID") Long clinicID);
-
-    Optional<ScheduleWorkTime> findTopByOrderByIdDesc();
-
+    @Query("SELECT s FROM ScheduleWorkTime s WHERE s.doctorId = :doctorId AND s.clinicId = :clinicId")
+    Optional<ScheduleWorkTime> findScheduleByDoctorAndClinic(@Param("doctorId") Long doctorId, @Param("clinicId") Long clinicId);
 
 }

@@ -1,21 +1,20 @@
 package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.Common.Entities.ScheduleWorkTime;
-import com.example.GraduationProject.Common.CompositeKey.DoctorClinicId;
-import com.example.GraduationProject.Common.Entities.Visit;
+import com.example.GraduationProject.Common.CompositeKey.ScheduleWorkTimeId;
 import com.example.GraduationProject.Core.Repositories.ScheduleWorkTimeRepository;
-import com.example.GraduationProject.WebApi.Controllers.Doctor.other.ScheduleWorkTimeController;
 import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,18 +27,29 @@ public class ScheduleWorkTimeService {
      * Add or update a doctor's work schedule.
      */
     public void addOrUpdateWorkSchedule(ScheduleWorkTime scheduleWorkTime) {
+        // Check if a schedule already exists for the given doctorId and clinicId
+        Optional<ScheduleWorkTime> existingSchedule = scheduleWorkTimeRepository
+                .findScheduleByDoctorAndClinic(scheduleWorkTime.getDoctorId(), scheduleWorkTime.getClinicId());
 
-        // Fetch the last visit ID from the repository
-        Long lastid = scheduleWorkTimeRepository.findTopByOrderByIdDesc()
-                .map(ScheduleWorkTime::getId)
-                .orElse(0L); // Default to 0 if no visits exist
+        if (existingSchedule.isPresent()) {
+            // Update the existing schedule if it already exists
+            ScheduleWorkTime existing = existingSchedule.get();
+            existing.setDaysOfWeek(scheduleWorkTime.getDaysOfWeek());
+            existing.setStartTime(scheduleWorkTime.getStartTime());
+            existing.setEndTime(scheduleWorkTime.getEndTime());
+            existing.setFromDate(scheduleWorkTime.getFromDate());
+            existing.setToDate(scheduleWorkTime.getToDate());
+            scheduleWorkTimeRepository.save(existing);
+        } else {
+            // Create a new schedule if it doesn't exist
+            Long newScheduleId = scheduleWorkTimeRepository.findTopByOrderByScheduleIdDesc()
+                    .map(ScheduleWorkTime::getScheduleId)
+                    .orElse(0L) + 1;
 
-        // Set the new visit ID
-        scheduleWorkTime.setId(lastid+1);
-        scheduleWorkTimeRepository.save(scheduleWorkTime);
+            scheduleWorkTime.setScheduleId(newScheduleId);
+            scheduleWorkTimeRepository.save(scheduleWorkTime);
+        }
     }
-
-
 
 
 

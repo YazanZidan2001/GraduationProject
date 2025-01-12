@@ -1,7 +1,9 @@
 package com.example.GraduationProject.WebApi.Controllers.Doctor.other;
 
+import com.example.GraduationProject.Common.Entities.DoctorClinic;
 import com.example.GraduationProject.Common.Entities.ScheduleWorkTime;
 import com.example.GraduationProject.Common.Entities.User;
+import com.example.GraduationProject.Core.Repositories.DoctorClinicRepository;
 import com.example.GraduationProject.Core.Services.ScheduleWorkTimeService;
 import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.SessionManagement;
@@ -15,8 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/doctor/schedule")
@@ -25,8 +25,7 @@ public class ScheduleWorkTimeController extends SessionManagement {
 
     private final ScheduleWorkTimeService scheduleWorkTimeService;
     private final AuthenticationService authenticationService;
-
-    private static final Logger logger = LoggerFactory.getLogger(ScheduleWorkTimeController.class);
+    private final DoctorClinicRepository doctorClinicRepository;
 
     @PostMapping
     public ResponseEntity<?> addOrUpdateWorkSchedule(
@@ -38,9 +37,21 @@ public class ScheduleWorkTimeController extends SessionManagement {
         User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
 
-
         try {
+            Long doctorId = user.getUserID();
+
+            // Retrieve the active clinic ID for the doctor
+            Long clinicId = doctorClinicRepository.findByDoctorIdAndIsActiveTrue(doctorId)
+                    .map(DoctorClinic::getClinicId)
+                    .orElseThrow(() -> new IllegalStateException("No active clinic found for the doctor."));
+
+            // Set the doctorId and clinicId in the schedule
+            schedule.setDoctorId(doctorId);
+            schedule.setClinicId(clinicId);
+
+            // Add or update the schedule
             scheduleWorkTimeService.addOrUpdateWorkSchedule(schedule);
+
             return ResponseEntity.ok("Work schedule saved successfully");
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -48,57 +59,43 @@ public class ScheduleWorkTimeController extends SessionManagement {
         }
     }
 
-    /**
-     * Get the work schedule for a specific date.
-     */
+
     @GetMapping("/{date}")
     public ResponseEntity<ScheduleWorkTime> getWorkScheduleByDate(
             @PathVariable LocalDate date,
             HttpServletRequest request) throws UserNotFoundException, NotFoundException {
-        // Validate the logged-in doctor
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
 
-        // Fetch the work schedule
         Long doctorId = user.getUserID();
         ScheduleWorkTime schedule = scheduleWorkTimeService.getWorkScheduleByDate(doctorId, date);
         return ResponseEntity.ok(schedule);
     }
 
-    /**
-     * Get available and reserved slots for a specific date.
-     */
     @GetMapping("/{date}/slots")
     public ResponseEntity<List<String>> getSlotsForDate(
             @PathVariable LocalDate date,
             @RequestParam List<String> reservedSlots,
             @RequestParam int interval,
             HttpServletRequest request) throws UserNotFoundException, NotFoundException {
-        // Validate the logged-in doctor
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
 
-        // Fetch the slots
         Long doctorId = user.getUserID();
         List<String> slots = scheduleWorkTimeService.getSlotsForDate(doctorId, date, reservedSlots, interval);
         return ResponseEntity.ok(slots);
     }
 
-    /**
-     * Get all work schedules for a doctor and clinic.
-     */
     @GetMapping("/{clinicId}/all")
     public ResponseEntity<List<ScheduleWorkTime>> getSchedulesByDoctorAndClinic(
             @PathVariable Long clinicId,
             HttpServletRequest request) throws UserNotFoundException {
-        // Validate the logged-in doctor
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
 
-        // Fetch schedules
         Long doctorId = user.getUserID();
         List<ScheduleWorkTime> schedules = scheduleWorkTimeService.getSchedulesByDoctorAndClinic(doctorId, clinicId);
         return ResponseEntity.ok(schedules);
