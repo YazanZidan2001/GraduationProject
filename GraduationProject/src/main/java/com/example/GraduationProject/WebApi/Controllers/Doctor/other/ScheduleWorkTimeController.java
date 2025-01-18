@@ -4,9 +4,11 @@ import com.example.GraduationProject.Common.Entities.DoctorClinic;
 import com.example.GraduationProject.Common.Entities.ScheduleWorkTime;
 import com.example.GraduationProject.Common.Entities.User;
 import com.example.GraduationProject.Core.Repositories.DoctorClinicRepository;
+import com.example.GraduationProject.Core.Services.DoctorClinicService;
 import com.example.GraduationProject.Core.Services.ScheduleWorkTimeService;
 import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.SessionManagement;
+import com.example.GraduationProject.WebApi.Exceptions.DoctorClinicNotFoundException;
 import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,13 +21,28 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/doctor/schedule")
+@RequestMapping("/doctors/schedule")
 @RequiredArgsConstructor
 public class ScheduleWorkTimeController extends SessionManagement {
 
     private final ScheduleWorkTimeService scheduleWorkTimeService;
     private final AuthenticationService authenticationService;
     private final DoctorClinicRepository doctorClinicRepository;
+    private final DoctorClinicService doctorClinicService;
+
+
+    @PutMapping("/update-interval")
+    public ResponseEntity<String> updateDoctorInterval(
+            @RequestParam Integer interval,
+            HttpServletRequest request) throws UserNotFoundException, DoctorClinicNotFoundException {
+
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        doctorClinicService.updateDoctorInterval(user.getUserID(), interval);
+        return ResponseEntity.ok("Interval updated successfully");
+    }
 
     @PostMapping
     public ResponseEntity<?> addOrUpdateWorkSchedule(
