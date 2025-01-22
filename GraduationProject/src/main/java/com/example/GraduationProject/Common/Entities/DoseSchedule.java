@@ -42,6 +42,16 @@ public class DoseSchedule {
     @Column(name = "dose_time", nullable = false)
     private LocalTime doseTime; // e.g. 07:00, 14:00, 20:00
 
+    @Column(name = "patient_id", nullable = false)
+    @NotNull(message = "Patient ID cannot be blank")
+    private Long patientId;
+
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "patient_id", insertable = false, updatable = false)
+    private Patient patient;
+
+
     // If you want to track notification or if dose was taken
     private boolean notificationSent;
     private boolean doseTaken;

@@ -17,4 +17,12 @@ public interface PrescriptionRepository extends JpaRepository<Prescription, Long
 // that haven't ended:
     @Query("SELECT p FROM Prescription p WHERE p.isActive = true AND p.endDate >= :today")
     List<Prescription> findActivePrescriptions(@Param("today") LocalDate today);
+
+    // All prescriptions for a specific patient
+    List<Prescription> findByPatientId(Long patientId);
+
+    @Query("SELECT p FROM Prescription p WHERE p.patientId = :patientId AND p.endDate < :today")
+            List<Prescription> findOldPrescriptions(@Param("patientId") Long patientId,
+            @Param("today") LocalDate today);
+
 }

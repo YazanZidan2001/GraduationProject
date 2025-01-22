@@ -92,9 +92,15 @@ public class DoseSchedulerService {
         ds.setMedicationId(p.getMedicationId());
         ds.setDoseDate(date);
         ds.setDoseTime(time);
+        ds.setPatientId(p.getPatientId());
         ds.setNotificationSent(false);
         ds.setDoseTaken(false);
 
         doseScheduleRepository.save(ds);
+    }
+
+    public List<DoseSchedule> getTodayDosesForPatient(Long patientId) {
+        LocalDate today = LocalDate.now();
+        return doseScheduleRepository.findByPatientIdAndDoseDate(patientId, today);
     }
 }

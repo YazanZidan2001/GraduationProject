@@ -18,6 +18,7 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
             "(:search IS NULL OR :search = '' OR " +
             "p.user.firstName LIKE %:search% OR " +
             "p.user.lastName LIKE %:search% OR " +
+            " CONCAT(p.user.firstName, ' ', p.user.lastName) LIKE %:search% OR " +
             "p.user.phone LIKE %:search% OR " +
             "p.user.email LIKE %:search% OR " +
             "CAST(p.patientId AS string) LIKE %:search% OR " +

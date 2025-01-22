@@ -116,11 +116,95 @@ public class PrescriptionService {
         ds.setMedicationId(p.getMedicationId());
         ds.setDoseDate(date);
         ds.setDoseTime(time);
+        ds.setPatientId(p.getPatientId());
         ds.setNotificationSent(false);
         ds.setDoseTaken(false);
 
         doseScheduleRepository.save(ds);
     }
+
+    // Return all prescriptions for a given patient
+    public List<Prescription> findAllByPatient(Long patientId) {
+        return prescriptionRepository.findByPatientId(patientId);
+    }
+
+
+    /**
+     * Returns all prescriptions for the given patient
+     */
+    public List<Prescription> getAllMedicationsForPatient(Long patientId) {
+        return prescriptionRepository.findByPatientId(patientId);
+    }
+
+    /**
+     * Returns active (and not old) prescriptions for the given patient.
+     * "not old" means we also check if endDate >= today's date, if that’s your definition.
+     */
+    public List<Prescription> getActiveMedicationsForPatient(Long patientId) {
+        List<Prescription> allForPatient = prescriptionRepository.findByPatientId(patientId);
+        LocalDate today = LocalDate.now();
+
+        return allForPatient.stream()
+                // isActive == true
+                .filter(p -> p.isActive())
+                // Also check if endDate >= now, so it’s not “old”
+                .filter(p -> !p.getEndDate().isBefore(today))
+                .toList();
+    }
+
+    /**
+     * Returns inactive or old prescriptions for the given patient.
+     * This typically means isActive = false or the endDate has passed.
+     */
+    public List<Prescription> getInactiveMedicationsForPatient(Long patientId) {
+        List<Prescription> allForPatient = prescriptionRepository.findByPatientId(patientId);
+        LocalDate today = LocalDate.now();
+
+        return allForPatient.stream()
+                // isActive == false OR endDate < now
+                .filter(p -> !p.isActive() )
+                .toList();
+    }
+
+    /**
+     * Returns OLD prescriptions for the given patient.
+     * "Old" here means endDate is strictly before today's date,
+     * regardless of isActive or not.
+     */
+    public List<Prescription> getOldMedicationsForPatient(Long patientId) {
+        LocalDate today = LocalDate.now();
+        List<Prescription> allForPatient = prescriptionRepository.findByPatientId(patientId);
+
+        return allForPatient.stream()
+                // old if endDate < today
+                .filter(p -> p.getEndDate() != null && p.getEndDate().isBefore(today))
+                .toList();
+    }
+
+
+    @Transactional
+    public void deactivateMedication(Long prescriptionId, Long doctorUserId) {
+        // 1) Fetch the prescription
+        Prescription prescription = prescriptionRepository.findById(prescriptionId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No prescription found with ID " + prescriptionId));
+
+        // 2) Check if the prescription belongs to the same doctor
+        //    Typically, you compare the doctor’s user ID or the doctor ID field on the Prescription
+        if (!prescription.getDoctorId().equals(doctorUserId)) {
+            throw new IllegalArgumentException(
+                    "You do not have permission to deactivate this prescription."
+            );
+        }
+
+        // 3) Set isActive to false
+        prescription.setActive(false);
+
+        // 4) Save
+        prescriptionRepository.save(prescription);
+    }
+
+
 
 
 }
