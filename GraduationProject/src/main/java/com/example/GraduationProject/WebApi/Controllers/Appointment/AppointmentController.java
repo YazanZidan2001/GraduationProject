@@ -5,6 +5,7 @@ import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.Appointment;
 import com.example.GraduationProject.Common.Entities.DoctorClinic;
 import com.example.GraduationProject.Common.Entities.User;
+import com.example.GraduationProject.Common.Enums.Role;
 import com.example.GraduationProject.Core.Repositories.AppointmentRepository;
 import com.example.GraduationProject.Core.Repositories.DoctorClinicRepository;
 import com.example.GraduationProject.Core.Services.AppointmentService;
@@ -375,7 +376,7 @@ public class AppointmentController extends SessionManagement {
 
     @GetMapping("/slots")
     public ResponseEntity<?> getAvailableSlots(
-            @RequestParam Long doctorID,
+            @RequestParam(required = false) Long doctorID,
             @RequestParam LocalDate date,
             HttpServletRequest request) throws UserNotFoundException {
 
@@ -383,6 +384,14 @@ public class AppointmentController extends SessionManagement {
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
         validateLoggedInPatientAndDoctor(user);
+
+        // If the user is a DOCTOR, override the doctorID with the ID from the token
+        if (user.getRole() == Role.DOCTOR) {
+            // If your doctor ID is the same as user ID, do:
+            // doctorID = user.getUserID();
+            // Or if there's a 1-to-1 relationship:
+            doctorID = user.getUserID();
+        }
 
         try {
             // Fetch available slots

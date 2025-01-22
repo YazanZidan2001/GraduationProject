@@ -254,30 +254,59 @@ public class AppointmentService {
 
     @Transactional
     public List<String> getAvailableSlots(Long doctorID, LocalDate date) {
-        // Fetch the active clinic and time interval for the doctor
         DoctorClinic doctorClinic = doctorClinicRepository.findByDoctorIdAndIsActiveTrue(doctorID)
                 .orElseThrow(() -> new IllegalArgumentException("Doctor is not associated with any active clinic"));
 
         Long clinicID = doctorClinic.getClinicId();
         Integer interval = doctorClinic.getTimeInterval();
-
         if (interval == null || interval <= 0) {
             throw new IllegalArgumentException("Invalid time interval configured for the doctor in the clinic");
         }
 
-        // Fetch the schedule for the doctor and clinic
-        ScheduleWorkTime schedule = scheduleWorkTimeRepository.findScheduleByDoctorAndClinic(doctorID, clinicID)
-                .orElseThrow(() -> new IllegalArgumentException("Schedule not found for the given doctor and clinic"));
+        // Fetch all schedules for the doctor & clinic
+        List<ScheduleWorkTime> schedules = scheduleWorkTimeRepository
+                .findScheduleByDoctorAndClinic(doctorID, clinicID);
 
-        // Validate if the provided date matches the schedule
-        String validationMessage = validateDateWithSchedule(date, schedule);
-        if (validationMessage != null) {
-            throw new IllegalArgumentException(validationMessage);
+        if (schedules.isEmpty()) {
+            throw new IllegalArgumentException("No schedules for the given doctor & clinic");
         }
 
-        // Generate slots
-        return generateSlots(doctorID, clinicID, date, schedule, interval);
+        List<String> finalSlots = new ArrayList<>();
+
+        // For each schedule, check if `date` is valid for that schedule;
+        // if so, generate the time slots
+        for (ScheduleWorkTime schedule : schedules) {
+            // If the date is within this schedule
+            if (isDateInSchedule(date, schedule)) {
+                List<String> generated = generateSlots(doctorID, clinicID, date, schedule, interval);
+                finalSlots.addAll(generated);
+            }
+        }
+
+        // If finalSlots is still empty, maybe it's not a valid date for any schedule
+        if (finalSlots.isEmpty()) {
+            throw new IllegalArgumentException("No valid schedules match the requested date");
+        }
+
+        return finalSlots;
     }
+
+    private boolean isDateInSchedule(LocalDate date, ScheduleWorkTime schedule) {
+        // Check day of week
+        DaysOfWeek dayOfWeek = DaysOfWeek.valueOf(date.getDayOfWeek().name());
+        if (!schedule.getDaysOfWeek().contains(dayOfWeek)) {
+            return false;
+        }
+        // Check if date is in [fromDate, toDate] range
+        if (date.isBefore(schedule.getFromDate())) {
+            return false;
+        }
+        if (schedule.getToDate() != null && date.isAfter(schedule.getToDate())) {
+            return false;
+        }
+        return true;
+    }
+
 
 
 

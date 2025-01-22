@@ -28,6 +28,6 @@ public interface ScheduleWorkTimeRepository extends JpaRepository<ScheduleWorkTi
     Optional<ScheduleWorkTime> findTopByOrderByScheduleIdDesc();
 
     @Query("SELECT s FROM ScheduleWorkTime s WHERE s.doctorId = :doctorId AND s.clinicId = :clinicId")
-    Optional<ScheduleWorkTime> findScheduleByDoctorAndClinic(@Param("doctorId") Long doctorId, @Param("clinicId") Long clinicId);
+    List<ScheduleWorkTime> findScheduleByDoctorAndClinic(@Param("doctorId") Long doctorId, @Param("clinicId") Long clinicId);
 
 }

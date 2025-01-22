@@ -62,43 +62,71 @@ public class AuthenticationService extends SessionManagement {
 
 
     @Transactional
-    public GeneralResponse uploadPhoto(String token, MultipartFile file) throws UserNotFoundException, IOException {
+    public GeneralResponse uploadPhoto(String token, MultipartFile file)
+            throws UserNotFoundException, IOException {
+        // 1) Extract user from token & validate permissions
         User user = extractUserFromToken(token);
         validateLoggedInAllUser(user);
 
-        // Resolve the folder path using Paths
-        Path folderPath = Paths.get(System.getProperty("user.dir"), "user-photos");
+        // 2) Decide where to store photos.
+        //    Let's put them in: <currentWorkingDir>/user-photos/
+        String folderName = "user-photos";
+        Path folderPath = Paths.get(System.getProperty("user.dir"), folderName);
         File folder = folderPath.toFile();
-        // Ensure the folder exists
+
+        // 3) Ensure the folder exists
         if (!folder.exists() && !folder.mkdirs()) {
-            throw new IOException("Failed to create directory for photos at: " + folderPath);
+            throw new IOException("Failed to create folder: " + folder.getAbsolutePath());
         }
 
-        // Validate file format and size
-        String fileExtension = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1).toLowerCase();
+        // 4) Validate file format & size
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null) {
+            throw new IllegalArgumentException("File name cannot be null.");
+        }
+        String fileExtension = originalFilename.substring(
+                originalFilename.lastIndexOf('.') + 1
+        ).toLowerCase();
+
         if (!List.of("jpg", "jpeg", "png").contains(fileExtension)) {
-            throw new IllegalArgumentException("Invalid file type. Only JPG, JPEG, and PNG are allowed.");
-        }
-        if (file.getSize() > 5 * 1024 * 1024) { // 5MB limit
-            throw new IllegalArgumentException("File size exceeds the 5MB limit.");
+            throw new IllegalArgumentException(
+                    "Invalid file type. Only JPG, JPEG, and PNG are allowed."
+            );
         }
 
-        // Generate a unique file name
-        String fileName = "user_" + user.getUserID() + "_" + System.currentTimeMillis() + "." + fileExtension;
-        Path photoFilePath = folderPath.resolve(fileName);
-        File photoFile = photoFilePath.toFile();
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException(
+                    "File size exceeds the 5MB limit."
+            );
+        }
 
-        // Save the file locally
+        // 5) Generate unique file name
+        //    e.g. user_123_1682101234567.jpg
+        String fileName = "user_" + user.getUserID() + "_"
+                + System.currentTimeMillis() + "." + fileExtension;
+
+        // 6) Create the destination file object
+        //    e.g.  /some/path/user-photos/user_123_1682101234567.jpg
+        File photoFile = new File(folder, fileName);
+
+        // 7) Transfer the uploaded file to disk
         file.transferTo(photoFile);
 
-        // Update the user's photo path
-        user.setPhotoPath(photoFilePath.toString());
+        // 8) Store the *relative path* in the database if you prefer
+        //    e.g. user-photos/user_123_1682101234567.jpg
+        String relativePath = folderName + "/" + fileName;
+        user.setPhotoPath(relativePath);
+
+        // 9) Save the user entity with the photo path
         repository.save(user);
 
+        // 10) Return a success response
         return GeneralResponse.builder()
                 .message("Photo uploaded successfully")
                 .build();
     }
+
+
 
 
 

@@ -1,0 +1,20 @@
+package com.example.GraduationProject.Core.Repositories;
+
+import com.example.GraduationProject.Common.Entities.Prescription;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@Repository
+public interface PrescriptionRepository extends JpaRepository<Prescription, Long> {
+
+
+    // Optionally, if you want a direct query for active prescriptions
+// that haven't ended:
+    @Query("SELECT p FROM Prescription p WHERE p.isActive = true AND p.endDate >= :today")
+    List<Prescription> findActivePrescriptions(@Param("today") LocalDate today);
+}

@@ -28,19 +28,19 @@ public class ScheduleWorkTimeService {
      */
     public void addOrUpdateWorkSchedule(ScheduleWorkTime scheduleWorkTime) {
         // Check if a schedule already exists for the given doctorId and clinicId
-        Optional<ScheduleWorkTime> existingSchedule = scheduleWorkTimeRepository
-                .findScheduleByDoctorAndClinic(scheduleWorkTime.getDoctorId(), scheduleWorkTime.getClinicId());
-
-        if (existingSchedule.isPresent()) {
-            // Update the existing schedule if it already exists
-            ScheduleWorkTime existing = existingSchedule.get();
-            existing.setDaysOfWeek(scheduleWorkTime.getDaysOfWeek());
-            existing.setStartTime(scheduleWorkTime.getStartTime());
-            existing.setEndTime(scheduleWorkTime.getEndTime());
-            existing.setFromDate(scheduleWorkTime.getFromDate());
-            existing.setToDate(scheduleWorkTime.getToDate());
-            scheduleWorkTimeRepository.save(existing);
-        } else {
+//        Optional<ScheduleWorkTime> existingSchedule = scheduleWorkTimeRepository
+//                .findScheduleByDoctorAndClinic(scheduleWorkTime.getDoctorId(), scheduleWorkTime.getClinicId());
+//
+//        if (existingSchedule.isPresent()) {
+//            // Update the existing schedule if it already exists
+//            ScheduleWorkTime existing = existingSchedule.get();
+//            existing.setDaysOfWeek(scheduleWorkTime.getDaysOfWeek());
+//            existing.setStartTime(scheduleWorkTime.getStartTime());
+//            existing.setEndTime(scheduleWorkTime.getEndTime());
+//            existing.setFromDate(scheduleWorkTime.getFromDate());
+//            existing.setToDate(scheduleWorkTime.getToDate());
+//            scheduleWorkTimeRepository.save(existing);
+//        } else {
             // Create a new schedule if it doesn't exist
             Long newScheduleId = scheduleWorkTimeRepository.findTopByOrderByScheduleIdDesc()
                     .map(ScheduleWorkTime::getScheduleId)
@@ -48,7 +48,7 @@ public class ScheduleWorkTimeService {
 
             scheduleWorkTime.setScheduleId(newScheduleId);
             scheduleWorkTimeRepository.save(scheduleWorkTime);
-        }
+//        }
     }
 
 
