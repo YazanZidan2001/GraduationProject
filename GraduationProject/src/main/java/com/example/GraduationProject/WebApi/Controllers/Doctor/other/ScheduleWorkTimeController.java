@@ -105,15 +105,18 @@ public class ScheduleWorkTimeController extends SessionManagement {
         return ResponseEntity.ok(slots);
     }
 
-    @GetMapping("/{clinicId}/all")
+    @GetMapping("/all")
     public ResponseEntity<List<ScheduleWorkTime>> getSchedulesByDoctorAndClinic(
-            @PathVariable Long clinicId,
             HttpServletRequest request) throws UserNotFoundException {
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
 
         Long doctorId = user.getUserID();
+        // Retrieve the active clinic ID for the doctor
+        Long clinicId = doctorClinicRepository.findByDoctorIdAndIsActiveTrue(doctorId)
+                .map(DoctorClinic::getClinicId)
+                .orElseThrow(() -> new IllegalStateException("No active clinic found for the doctor."));
         List<ScheduleWorkTime> schedules = scheduleWorkTimeService.getSchedulesByDoctorAndClinic(doctorId, clinicId);
         return ResponseEntity.ok(schedules);
     }
