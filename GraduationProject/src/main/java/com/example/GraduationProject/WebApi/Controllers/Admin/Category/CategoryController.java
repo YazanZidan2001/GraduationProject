@@ -68,4 +68,30 @@ public class CategoryController extends SessionManagement {
         List<Category> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);
     }
+
+
+    /**
+     * GET /categories?search=xxx
+     * Returns all categories, or filters by search string on category_name.
+     */
+    @GetMapping
+    public ResponseEntity<?> getAllCategories(@RequestParam(required = false) String search,
+                                              HttpServletRequest httpServletRequest)
+            throws UserNotFoundException {
+
+        String token = service.extractToken(httpServletRequest);
+        User user = service.extractUserFromToken(token);
+        validateLoggedInDoctorOrAdmin(user);
+
+        try {
+            List<Category> categories = categoryService.getAllCategories(search);
+            if (categories.isEmpty()) {
+                return ResponseEntity.ok("No categories found.");
+            }
+            return ResponseEntity.ok(categories);
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body("Error fetching categories: " + ex.getMessage());
+        }
+    }
 }

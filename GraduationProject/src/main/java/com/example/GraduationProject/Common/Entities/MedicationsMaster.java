@@ -20,7 +20,6 @@ public class MedicationsMaster {
     @Id
     @Column(name = "medication_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @NotNull(message = "medication ID cannot be blank")
     private Long medicationID;
 
     @Column(name = "scientific_name ", nullable = false)

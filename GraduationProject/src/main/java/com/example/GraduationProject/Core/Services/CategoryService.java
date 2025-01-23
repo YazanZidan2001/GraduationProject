@@ -43,4 +43,11 @@ public class CategoryService {
     public Optional<Category> getCategoryByName(String categoryName) {
         return categoryRepository.findById(categoryName);
     }
+
+    /**
+     * Get all categories, optionally filtered by a search string.
+     */
+    public List<Category> getAllCategories(String search) {
+        return categoryRepository.searchCategories(search);
+    }
 }
