@@ -74,7 +74,7 @@ public class CategoryController extends SessionManagement {
      * GET /categories?search=xxx
      * Returns all categories, or filters by search string on category_name.
      */
-    @GetMapping
+    @GetMapping("/get-all-categories")
     public ResponseEntity<?> getAllCategories(@RequestParam(required = false) String search,
                                               HttpServletRequest httpServletRequest)
             throws UserNotFoundException {
