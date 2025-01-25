@@ -54,17 +54,20 @@ public class LabTest {
     @Column(name = "insert_time", nullable = false)
     private LocalDateTime insertTime;
 
-    @Column(name = "clinic_id", nullable = false)
-    private Long clinicId;
-
-    @Column(name = "doctor_id", nullable = false)
-    private Long doctorId;
+    @Column(name = "result_file_path", nullable = true)
+    private String resultFilePath; // <--- NEW
 
     // Automatically populate insertTime before persisting
     @PrePersist
     protected void onInsert() {
         this.insertTime = LocalDateTime.now();
     }
+
+    @Column(name = "clinic_id", nullable = false)
+    private Long clinicId;
+
+    @Column(name = "doctor_id", nullable = false)
+    private Long doctorId;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumns({

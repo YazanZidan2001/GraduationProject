@@ -8,12 +8,21 @@ import com.example.GraduationProject.Core.Services.LabTestService;
 import com.example.GraduationProject.SessionManagement;
 import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 @RestController
@@ -48,6 +57,41 @@ public class LabTestController extends SessionManagement {
         labTestService.addMultipleLabTests(labTests);
         return ResponseEntity.status(HttpStatus.CREATED).body("Multiple Lab Tests added successfully");
     }
+
+
+    @PostMapping("/labtest/batch-with-files")
+    public ResponseEntity<String> addMultipleLabTestsWithFiles(
+            @RequestPart("labTests") String labTestsJson,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            HttpServletRequest request
+    ) throws UserNotFoundException, NotFoundException, IOException {
+
+        // 1) Validate user is a doctor
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        // 2) Parse the JSON array into LabTest objects
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<LabTest> labTests = objectMapper.readValue(
+                labTestsJson,
+                new TypeReference<List<LabTest>>() {}
+        );
+
+        // 3) If you allow partial or optional files, you can handle mismatch.
+        //    Otherwise, ensure same size if each LabTest expects a file.
+        if (files != null && !files.isEmpty() && files.size() != labTests.size()) {
+            return ResponseEntity.badRequest()
+                    .body("Number of files does not match number of LabTest records.");
+        }
+
+        // 4) Add them in the service. We'll pass the labTests + the files
+        labTestService.addMultipleLabTestsWithFiles(labTests, files);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Multiple Lab Tests added successfully with result files");
+    }
+
 
 
     /**
@@ -178,6 +222,43 @@ public class LabTestController extends SessionManagement {
 
         LabTest labTest = labTestService.getLabTestForPatientByVisitAndId(patientId, visitId, labTestId);
         return ResponseEntity.ok(labTest);
+    }
+
+
+    @PostMapping("/{testId}/upload-result")
+    public ResponseEntity<?> uploadLabTestResult(
+            @PathVariable Long testId,
+            @RequestParam("file") MultipartFile file
+    ) {
+        try {
+            LabTest updatedLabTest = labTestService.uploadLabResultFile(testId, file);
+            return ResponseEntity.ok("File uploaded successfully. Path: " + updatedLabTest.getResultFilePath());
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body("Error uploading file: " + ex.getMessage());
+        }
+    }
+
+    @GetMapping("/{testId}/download-result")
+    public ResponseEntity<Resource> downloadLabTestResult(@PathVariable Long testId) throws IOException {
+        LabTest labTest = labTestService.getLabTestById(testId);
+        String path = labTest.getResultFilePath();
+        if (path == null) {
+            return ResponseEntity.notFound().build();
+        }
+        File file = new File(path);
+        if (!file.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Resource resource = new UrlResource(file.toURI());
+        String contentType = Files.probeContentType(file.toPath());
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
     }
 
 

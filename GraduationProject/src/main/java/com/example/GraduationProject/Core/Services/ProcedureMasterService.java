@@ -24,6 +24,16 @@ public class ProcedureMasterService {
         procedureMasterRepository.save(procedure);
     }
 
+
+
+    /**
+     * Add multiple procedures in a single call.
+     */
+    public List<ProcedureMaster> addMultipleProcedures(List<ProcedureMaster> procedures) {
+        // Validate or check for duplicates, if needed, prior to saving
+        return procedureMasterRepository.saveAll(procedures);
+    }
+
     @Transactional
     public List<ProcedureMaster> getAllProcedures(String search) {
         // Check if a search term is provided

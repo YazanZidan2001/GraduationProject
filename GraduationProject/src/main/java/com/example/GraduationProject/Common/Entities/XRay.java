@@ -54,6 +54,9 @@ public class XRay {
     @Column(name = "insert_time", nullable = false)
     private LocalDateTime insertTime;
 
+    @Column(name = "result_file_path", nullable = true)
+    private String resultFilePath; // <--- NEW
+
     // Automatically populate insertTime before persisting
     @PrePersist
     protected void onInsert() {
@@ -74,9 +77,5 @@ public class XRay {
             @JoinColumn(name = "patient_id", referencedColumnName = "patient_id", insertable = false, updatable = false)
     })
     private Visit visit;
-    // Optional: Access patient data from the visit
-    @Transient
-    public Long getAssociatedPatientId() {
-        return this.visit != null ? this.visit.getPatientId() : null;
-    }
+
 }

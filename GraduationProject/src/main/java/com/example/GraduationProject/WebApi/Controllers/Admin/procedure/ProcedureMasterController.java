@@ -25,14 +25,32 @@ public class ProcedureMasterController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Procedure added successfully");
     }
 
-    @GetMapping("/")
-    public ResponseEntity<List<ProcedureMaster>> getAllProcedures(
-            @RequestParam(required = false) String search) {
-        // Fetch all procedures with optional search
-        List<ProcedureMaster> procedures = procedureMasterService.getAllProcedures(search);
+    /**
+     * Add multiple procedures
+     * Expects a JSON array of ProcedureMaster objects in the request body.
+     */
+    @PostMapping("/bulk")
+    public ResponseEntity<?> addMultipleProcedures(@RequestBody List<ProcedureMaster> procedures) {
+        try {
+            List<ProcedureMaster> savedList = procedureMasterService.addMultipleProcedures(procedures);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedList);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to add multiple procedures: " + ex.getMessage());
+        }
+    }
 
-        // Return the response
-        return ResponseEntity.ok(procedures);
+    @GetMapping("/")
+    public ResponseEntity<?> getAllProcedures(
+            @RequestParam(required = false) String search) {
+        try {
+            List<ProcedureMaster> procedures = procedureMasterService.getAllProcedures(search);
+            if (procedures.isEmpty()) {
+                return ResponseEntity.ok("No procedures found.");
+            }
+            return ResponseEntity.ok(procedures);
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body("Error fetching procedures: " + ex.getMessage());
+        }
     }
 
 
