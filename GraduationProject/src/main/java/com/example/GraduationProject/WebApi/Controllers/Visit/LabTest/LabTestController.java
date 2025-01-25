@@ -10,6 +10,8 @@ import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -59,7 +61,7 @@ public class LabTestController extends SessionManagement {
     }
 
 
-    @PostMapping("/labtest/batch-with-files")
+    @PostMapping("/batch-with-files")
     public ResponseEntity<String> addMultipleLabTestsWithFiles(
             @RequestPart("labTests") String labTestsJson,
             @RequestPart(value = "files", required = false) List<MultipartFile> files,
@@ -72,18 +74,20 @@ public class LabTestController extends SessionManagement {
         validateLoggedInDoctor(user);
 
         // 2) Parse the JSON array into LabTest objects
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<LabTest> labTests = objectMapper.readValue(
+        ObjectMapper mapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        List<LabTest> labTests = mapper.readValue(
                 labTestsJson,
                 new TypeReference<List<LabTest>>() {}
         );
 
         // 3) If you allow partial or optional files, you can handle mismatch.
         //    Otherwise, ensure same size if each LabTest expects a file.
-        if (files != null && !files.isEmpty() && files.size() != labTests.size()) {
-            return ResponseEntity.badRequest()
-                    .body("Number of files does not match number of LabTest records.");
-        }
+//        if (files != null && !files.isEmpty() && files.size() != labTests.size()) {
+//            return ResponseEntity.badRequest()
+//                    .body("Number of files does not match number of LabTest records.");
+//        }
 
         // 4) Add them in the service. We'll pass the labTests + the files
         labTestService.addMultipleLabTestsWithFiles(labTests, files);

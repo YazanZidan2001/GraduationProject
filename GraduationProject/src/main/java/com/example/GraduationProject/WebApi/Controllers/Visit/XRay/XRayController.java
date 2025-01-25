@@ -11,6 +11,8 @@ import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -79,13 +81,15 @@ public class XRayController extends SessionManagement {
         validateLoggedInDoctor(user);
 
         // 2) Parse the JSON array from the string
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<XRay> xRays = objectMapper.readValue(xRaysJson, new TypeReference<List<XRay>>() {});
+        ObjectMapper mapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        List<XRay> xRays = mapper.readValue(xRaysJson, new TypeReference<List<XRay>>() {});
 
         // 3) (Optional) If we require the same number of files as xRays, check
-        if (files != null && !files.isEmpty() && files.size() != xRays.size()) {
-            return ResponseEntity.badRequest().body("Number of files != number of XRay records.");
-        }
+//        if (files != null && !files.isEmpty() && files.size() != xRays.size()) {
+//            return ResponseEntity.badRequest().body("Number of files != number of XRay records.");
+//        }
 
         // 4) Call service
         xRayService.addMultipleXRaysWithFiles(xRays, files);
