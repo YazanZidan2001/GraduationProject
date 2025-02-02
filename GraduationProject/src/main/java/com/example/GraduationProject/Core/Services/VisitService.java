@@ -33,7 +33,7 @@ public class VisitService {
                 .orElse(0L); // Default to 0 if no visits exist
 
         // Set the new visit ID
-        visit.setVisitID(lastVisitId + 1);
+//        visit.setVisitID(lastVisitId + 1);
 
         // Automatically set the visit date to the current date
         visit.setVisitDate(LocalDate.now());
