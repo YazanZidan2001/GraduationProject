@@ -47,19 +47,49 @@ public class ProcedureVisitsController extends SessionManagement {
 
 
     @PostMapping("/procedurevisit/batch")
-    public ResponseEntity<String> addMultipleProcedureVisits(@RequestBody List<ProcedureVisits> procedureVisitsList,
-                                                             HttpServletRequest request) throws UserNotFoundException, NotFoundException {
-        String token = authenticationService.extractToken(request);
-        User user = authenticationService.extractUserFromToken(token);
-        validateLoggedInDoctor(user);
+    public ResponseEntity<?> addMultipleProcedureVisits(
+            @RequestBody List<ProcedureVisits> procedureVisitsList,
+            HttpServletRequest request) {
+        try {
+            // 1) Validate user (Only doctors are allowed)
+            String token = authenticationService.extractToken(request);
+            User user = authenticationService.extractUserFromToken(token);
+            validateLoggedInDoctor(user);
 
-        for (ProcedureVisits procedureVisits : procedureVisitsList) {
-            procedureVisits.setUserID(user.getUserID());
+            // 2) Validate request body
+            if (procedureVisitsList == null || procedureVisitsList.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Procedure visits list cannot be null or empty.");
+            }
+
+            for (int i = 0; i < procedureVisitsList.size(); i++) {
+                ProcedureVisits procedureVisits = procedureVisitsList.get(i);
+
+                if (procedureVisits.getVisitID() == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Visit ID is required for procedure visit at index " + i);
+                }
+
+                // Set doctor ID (user ID)
+                procedureVisits.setUserID(user.getUserID());
+            }
+
+            // 3) Call service to add multiple procedure visits
+            procedureVisitsService.addMultipleProcedureVisits(procedureVisitsList);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body("Multiple Procedure Visits added successfully.");
+
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found: " + ex.getMessage());
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request: " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
         }
-
-        procedureVisitsService.addMultipleProcedureVisits(procedureVisitsList);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Multiple Procedure Visits added successfully");
     }
+
 
 
 

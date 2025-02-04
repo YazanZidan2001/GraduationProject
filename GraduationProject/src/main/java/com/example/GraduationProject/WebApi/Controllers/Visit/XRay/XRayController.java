@@ -69,34 +69,53 @@ public class XRayController extends SessionManagement {
      *   - @RequestPart("files") => list of MultipartFiles (image/PDF)
      */
     @PostMapping("/batch-with-files")
-    public ResponseEntity<String> addMultipleXRaysWithFiles(
+    public ResponseEntity<?> addMultipleXRaysWithFiles(
             @RequestPart("xRays") String xRaysJson,
             @RequestPart(value = "files", required = false) List<MultipartFile> files,
             HttpServletRequest request
-    ) throws UserNotFoundException, NotFoundException, IOException {
+    ) {
+        try {
+            // 1) Validate user (Only doctors are allowed)
+            String token = authenticationService.extractToken(request);
+            User user = authenticationService.extractUserFromToken(token);
+            validateLoggedInDoctor(user);
 
-        // 1) Validate user (doctor, for example)
-        String token = authenticationService.extractToken(request);
-        User user = authenticationService.extractUserFromToken(token);
-        validateLoggedInDoctor(user);
+            // 2) Parse the JSON array from the string
+            ObjectMapper mapper = new ObjectMapper()
+                    .registerModule(new JavaTimeModule())
+                    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        // 2) Parse the JSON array from the string
-        ObjectMapper mapper = new ObjectMapper()
-                .registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        List<XRay> xRays = mapper.readValue(xRaysJson, new TypeReference<List<XRay>>() {});
+            List<XRay> xRays = mapper.readValue(xRaysJson, new TypeReference<List<XRay>>() {});
 
-        // 3) (Optional) If we require the same number of files as xRays, check
-//        if (files != null && !files.isEmpty() && files.size() != xRays.size()) {
-//            return ResponseEntity.badRequest().body("Number of files != number of XRay records.");
-//        }
+            // 3) Validate the parsed XRay objects
+            if (xRays.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("XRay list cannot be empty.");
+            }
+            for (XRay xRay : xRays) {
+                if (xRay.getVisitId() == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Each XRay must have a visitId.");
+                }
+            }
 
-        // 4) Call service
-        xRayService.addMultipleXRaysWithFiles(xRays, files);
+            // 4) Call service
+            xRayService.addMultipleXRaysWithFiles(xRays, files);
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Multiple XRays with files added successfully");
+            return ResponseEntity.status(HttpStatus.CREATED).body("Multiple XRays with files added successfully.");
+
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found: " + ex.getMessage());
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request: " + ex.getMessage());
+        } catch (IOException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload error: " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
+        }
     }
+
 
 
     /**

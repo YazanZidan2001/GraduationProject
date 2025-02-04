@@ -62,39 +62,54 @@ public class LabTestController extends SessionManagement {
 
 
     @PostMapping("/batch-with-files")
-    public ResponseEntity<String> addMultipleLabTestsWithFiles(
+    public ResponseEntity<?> addMultipleLabTestsWithFiles(
             @RequestPart("labTests") String labTestsJson,
             @RequestPart(value = "files", required = false) List<MultipartFile> files,
             HttpServletRequest request
-    ) throws UserNotFoundException, NotFoundException, IOException {
+    ) {
+        try {
+            // 1) Validate user (Only doctors are allowed)
+            String token = authenticationService.extractToken(request);
+            User user = authenticationService.extractUserFromToken(token);
+            validateLoggedInDoctor(user);
 
-        // 1) Validate user is a doctor
-        String token = authenticationService.extractToken(request);
-        User user = authenticationService.extractUserFromToken(token);
-        validateLoggedInDoctor(user);
+            // 2) Parse the JSON array from the string
+            ObjectMapper mapper = new ObjectMapper()
+                    .registerModule(new JavaTimeModule())
+                    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        // 2) Parse the JSON array into LabTest objects
-        ObjectMapper mapper = new ObjectMapper()
-                .registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        List<LabTest> labTests = mapper.readValue(
-                labTestsJson,
-                new TypeReference<List<LabTest>>() {}
-        );
+            List<LabTest> labTests = mapper.readValue(labTestsJson, new TypeReference<List<LabTest>>() {});
 
-        // 3) If you allow partial or optional files, you can handle mismatch.
-        //    Otherwise, ensure same size if each LabTest expects a file.
-//        if (files != null && !files.isEmpty() && files.size() != labTests.size()) {
-//            return ResponseEntity.badRequest()
-//                    .body("Number of files does not match number of LabTest records.");
-//        }
+            // 3) Validate the parsed LabTest objects
+            if (labTests.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("LabTest list cannot be empty.");
+            }
+            for (LabTest labTest : labTests) {
+                if (labTest.getVisitId() == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Each LabTest must have a visitId.");
+                }
+            }
 
-        // 4) Add them in the service. We'll pass the labTests + the files
-        labTestService.addMultipleLabTestsWithFiles(labTests, files);
+            // 4) Call service
+            labTestService.addMultipleLabTestsWithFiles(labTests, files);
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Multiple Lab Tests added successfully with result files");
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Multiple Lab Tests added successfully with result files.");
+
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found: " + ex.getMessage());
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request: " + ex.getMessage());
+        } catch (IOException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload error: " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
+        }
     }
+
 
 
 

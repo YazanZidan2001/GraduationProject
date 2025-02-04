@@ -6,8 +6,8 @@ import com.example.GraduationProject.Common.Entities.User;
 import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.Core.Services.PrescriptionService;
 import com.example.GraduationProject.SessionManagement;
-import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
+import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,26 +26,67 @@ public class PrescriptionController extends SessionManagement {
 
 
     @PostMapping
-    public ResponseEntity<String> createPrescription(
+    public ResponseEntity<?> createPrescription(
             @RequestBody List<Prescription> prescriptionRequests,
             HttpServletRequest request
-    ) throws UserNotFoundException, NotFoundException {
-        String token = authenticationService.extractToken(request);
-        User user = authenticationService.extractUserFromToken(token);
-        validateLoggedInDoctor(user);
+    ) {
+        try {
+            // 1) Validate user (Only doctors are allowed)
+            String token = authenticationService.extractToken(request);
+            User user = authenticationService.extractUserFromToken(token);
+            validateLoggedInDoctor(user);
 
-        // Set the userId on each prescription in the list
-        for (Prescription p : prescriptionRequests) {
-            p.setUserId(user.getUserID());
-            p.setActive(true);
+            // 2) Validate request body
+            if (prescriptionRequests == null || prescriptionRequests.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Prescription list cannot be null or empty.");
+            }
+
+            for (int i = 0; i < prescriptionRequests.size(); i++) {
+                Prescription p = prescriptionRequests.get(i);
+
+                if (p.getVisitId() == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Visit ID is required for prescription at index " + i);
+                }
+                if (p.getMedicationId() == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Medication ID is required for prescription at index " + i);
+                }
+                if (p.getStartDate() == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Start date is required for prescription at index " + i);
+                }
+                if (p.getTotalDays() == null || p.getTotalDays() <= 0) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Total days must be greater than 0 for prescription at index " + i);
+                }
+                if (p.getDayInterval() == null || p.getDayInterval() <= 0) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Day interval must be greater than 0 for prescription at index " + i);
+                }
+
+                // Set the user ID and activate the prescription
+                p.setUserId(user.getUserID());
+                p.setActive(true);
+            }
+
+            // 3) Call service to create prescriptions
+            prescriptionService.createPrescription(prescriptionRequests);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Multiple prescriptions added successfully.");
+
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found: " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request: " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
         }
-
-        // Pass the entire list to the service
-         prescriptionService.createPrescription(prescriptionRequests);
-
-        // Return them all (could return a custom response object if you prefer)
-        return ResponseEntity.status(HttpStatus.CREATED).body("Multiple Prescription added successfully");
     }
+
 
 
     @GetMapping("/patient/{patientId}")
