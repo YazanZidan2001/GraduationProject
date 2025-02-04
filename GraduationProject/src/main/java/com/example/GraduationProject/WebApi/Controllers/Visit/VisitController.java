@@ -4,6 +4,7 @@ import com.example.GraduationProject.Common.DTOs.PaginationDTO;
 import com.example.GraduationProject.Common.Entities.User;
 import com.example.GraduationProject.Common.Entities.Visit;
 import com.example.GraduationProject.Common.Enums.Role;
+import com.example.GraduationProject.Core.Repositories.VisitRepository;
 import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.Core.Services.DoctorClinicService;
 import com.example.GraduationProject.Core.Services.VisitService;
@@ -13,6 +14,7 @@ import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,29 +27,64 @@ public class VisitController extends SessionManagement {
 
     private final VisitService visitService;
     private final AuthenticationService authenticationService;
-
+    private final VisitRepository visitRepository;
 
     /**
      * Add a new visit (only doctors can add visits).
      */
     @PostMapping
-    public ResponseEntity<Visit> addVisit(@RequestBody Visit visit, HttpServletRequest request)
-            throws UserNotFoundException {
-        String token = authenticationService.extractToken(request);
-        User user = authenticationService.extractUserFromToken(token);
+    public ResponseEntity<?> addVisit(@RequestBody Visit visit, HttpServletRequest request) {
+        try {
+            String token = authenticationService.extractToken(request);
+            User user = authenticationService.extractUserFromToken(token);
 
-        // Validate that the logged-in user is a doctor
-        validateLoggedInDoctor(user);
+            // Validate that the logged-in user is a doctor
+            validateLoggedInDoctor(user);
 
-        // Extract the doctor ID from the token
-        Long doctorIdFromToken = user.getUserID();
+            // Extract the doctor ID from the token
+            Long doctorIdFromToken = user.getUserID();
 
-        // Call the service to add the visit and return the saved visit
-        Visit savedVisit = visitService.addVisit(visit, doctorIdFromToken);
+            // Validate request body
+            if (visit == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Visit data cannot be null.");
+            }
 
-        // Return the saved visit object in the response
-        return ResponseEntity.ok(savedVisit);
+            if (visit.getVisitID() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Visit ID is required.");
+            }
+
+            if (visitRepository.findByVisitID(visit.getVisitID()).isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("A visit with this ID already exists.");
+            }
+
+            if (visit.getPatientId() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Patient ID is required.");
+            }
+
+            if (visit.getVisitTime() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Visit time is required.");
+            }
+
+            if (visit.getComplaint() == null || visit.getComplaint().trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Complaint cannot be empty.");
+            }
+
+            // Call the service to add the visit
+            Visit savedVisit = visitService.addVisit(visit, doctorIdFromToken);
+
+            // Return the saved visit object in the response
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedVisit);
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found: " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid input: " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while adding the visit: " + ex.getMessage());
+        }
     }
+
+
 
 
 
