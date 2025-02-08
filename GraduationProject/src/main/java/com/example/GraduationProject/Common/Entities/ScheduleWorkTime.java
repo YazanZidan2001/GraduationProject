@@ -1,10 +1,8 @@
 package com.example.GraduationProject.Common.Entities;
 
-import com.example.GraduationProject.Common.CompositeKey.DoctorClinicId;
 import com.example.GraduationProject.Common.CompositeKey.ScheduleWorkTimeId;
+import com.example.GraduationProject.Common.Converters.DaysOfWeekConverter;
 import com.example.GraduationProject.Common.Enums.DaysOfWeek;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -14,10 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -44,9 +39,9 @@ public class ScheduleWorkTime {
     @NotNull(message = "Clinic ID cannot be blank")
     private Long clinicId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "day_of_week", nullable = false)
-    @NotNull(message = "Days of Week cannot be blank")
+    // Store multiple DaysOfWeek as a single comma-separated string in the DB
+    @Convert(converter = DaysOfWeekConverter.class)
+    @Column(name = "days_of_week", nullable = false)
     private List<DaysOfWeek> daysOfWeek;
 
 

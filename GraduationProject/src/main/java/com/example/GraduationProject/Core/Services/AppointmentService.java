@@ -292,40 +292,36 @@ public class AppointmentService {
     }
 
     private boolean isDateInSchedule(LocalDate date, ScheduleWorkTime schedule) {
-        // Check day of week
+        // Convert LocalDate's DayOfWeek to your DaysOfWeek enum
         DaysOfWeek dayOfWeek = DaysOfWeek.valueOf(date.getDayOfWeek().name());
-        if (!schedule.getDaysOfWeek().contains(dayOfWeek)) {
+
+        // Check if daysOfWeek in this schedule is not null and contains the day
+        List<DaysOfWeek> scheduledDays = schedule.getDaysOfWeek();
+        if (scheduledDays == null || !scheduledDays.contains(dayOfWeek)) {
+            return false; // The schedule does not include this day
+        }
+
+        // Check if the date falls within the schedule's valid range
+        LocalDate fromDate = schedule.getFromDate();
+        LocalDate toDate = schedule.getToDate(); // May be null
+
+        // 'date' must be >= fromDate
+        if (date.isBefore(fromDate)) {
             return false;
         }
-        // Check if date is in [fromDate, toDate] range
-        if (date.isBefore(schedule.getFromDate())) {
+
+        // If a toDate is specified, 'date' must be <= toDate
+        if (toDate != null && date.isAfter(toDate)) {
             return false;
         }
-        if (schedule.getToDate() != null && date.isAfter(schedule.getToDate())) {
-            return false;
-        }
+
+        // If all checks pass, the date is valid for this schedule
         return true;
     }
 
 
 
 
-
-    private String validateDateWithSchedule(LocalDate date, ScheduleWorkTime schedule) {
-        // Check if the day of the week matches the schedule
-        DaysOfWeek dayOfWeek = DaysOfWeek.valueOf(date.getDayOfWeek().name());
-        if (!schedule.getDaysOfWeek().contains(dayOfWeek)) {
-            return "The provided date does not match the schedule";
-        }
-
-        // Check if the date falls within the schedule's range
-        if (date.isBefore(schedule.getFromDate()) ||
-                (schedule.getToDate() != null && date.isAfter(schedule.getToDate()))) {
-            return "The provided date does not match the schedule";
-        }
-
-        return null; // The date is valid
-    }
 
 
 

@@ -2,6 +2,9 @@ package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.Common.Entities.ScheduleWorkTime;
 import com.example.GraduationProject.Common.CompositeKey.ScheduleWorkTimeId;
+import com.example.GraduationProject.Common.Entities.ScheduleWorkTimeDay;
+import com.example.GraduationProject.Common.Enums.DaysOfWeek;
+import com.example.GraduationProject.Core.Repositories.ScheduleWorkTimeDayRepository;
 import com.example.GraduationProject.Core.Repositories.ScheduleWorkTimeRepository;
 import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,34 +25,41 @@ public class ScheduleWorkTimeService {
 
     private final ScheduleWorkTimeRepository scheduleWorkTimeRepository;
     private static final Logger logger = LoggerFactory.getLogger(ScheduleWorkTimeService.class);
+    private final ScheduleWorkTimeDayRepository scheduleWorkTimeDayRepository; // Injected here
 
     /**
      * Add or update a doctor's work schedule.
      */
+    @Transactional
     public void addOrUpdateWorkSchedule(ScheduleWorkTime scheduleWorkTime) {
-        // Check if a schedule already exists for the given doctorId and clinicId
-//        Optional<ScheduleWorkTime> existingSchedule = scheduleWorkTimeRepository
-//                .findScheduleByDoctorAndClinic(scheduleWorkTime.getDoctorId(), scheduleWorkTime.getClinicId());
-//
-//        if (existingSchedule.isPresent()) {
-//            // Update the existing schedule if it already exists
-//            ScheduleWorkTime existing = existingSchedule.get();
-//            existing.setDaysOfWeek(scheduleWorkTime.getDaysOfWeek());
-//            existing.setStartTime(scheduleWorkTime.getStartTime());
-//            existing.setEndTime(scheduleWorkTime.getEndTime());
-//            existing.setFromDate(scheduleWorkTime.getFromDate());
-//            existing.setToDate(scheduleWorkTime.getToDate());
-//            scheduleWorkTimeRepository.save(existing);
-//        } else {
-            // Create a new schedule if it doesn't exist
-            Long newScheduleId = scheduleWorkTimeRepository.findTopByOrderByScheduleIdDesc()
-                    .map(ScheduleWorkTime::getScheduleId)
-                    .orElse(0L) + 1;
+        Long newScheduleId = scheduleWorkTimeRepository.findTopByOrderByScheduleIdDesc()
+                .map(ScheduleWorkTime::getScheduleId)
+                .orElse(0L) + 1;
 
-            scheduleWorkTime.setScheduleId(newScheduleId);
-            scheduleWorkTimeRepository.save(scheduleWorkTime);
+        scheduleWorkTime.setScheduleId(newScheduleId);
+
+//        // Ensure daysOfWeek list is not empty before saving
+//        if (daysOfWeek == null || daysOfWeek.isEmpty()) {
+//            throw new IllegalArgumentException("At least one workday must be specified.");
 //        }
+//
+//        // Save the schedule first
+//        scheduleWorkTimeRepository.save(scheduleWorkTime);
+//
+//        // Save work days for the schedule
+//        List<ScheduleWorkTimeDay> scheduleDays = new ArrayList<>();
+//        for (DaysOfWeek day : daysOfWeek) {
+//            ScheduleWorkTimeDay scheduleDay = new ScheduleWorkTimeDay();
+//            scheduleDay.setScheduleWorkTime(scheduleWorkTime);
+//            scheduleDay.setDayOfWeek(day);
+//            scheduleDays.add(scheduleDay);
+//        }
+
+        // Save days into schedule_work_time_days table
+        scheduleWorkTimeRepository.save(scheduleWorkTime);
     }
+
+
 
 
 

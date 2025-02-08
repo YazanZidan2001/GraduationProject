@@ -1,8 +1,10 @@
 package com.example.GraduationProject.WebApi.Controllers.Doctor.other;
 
+import com.example.GraduationProject.Common.DTOs.ScheduleWorkTimeRequest;
 import com.example.GraduationProject.Common.Entities.DoctorClinic;
 import com.example.GraduationProject.Common.Entities.ScheduleWorkTime;
 import com.example.GraduationProject.Common.Entities.User;
+import com.example.GraduationProject.Common.Enums.DaysOfWeek;
 import com.example.GraduationProject.Core.Repositories.DoctorClinicRepository;
 import com.example.GraduationProject.Core.Services.DoctorClinicService;
 import com.example.GraduationProject.Core.Services.ScheduleWorkTimeService;
@@ -46,27 +48,30 @@ public class ScheduleWorkTimeController extends SessionManagement {
 
     @PostMapping
     public ResponseEntity<?> addOrUpdateWorkSchedule(
-            @RequestBody ScheduleWorkTime schedule,
+            @RequestBody ScheduleWorkTimeRequest scheduleRequest,
             HttpServletRequest request) throws UserNotFoundException {
 
-        // Validate logged-in user
+        if (scheduleRequest == null || scheduleRequest.getSchedule() == null) {
+            return ResponseEntity.badRequest().body("Invalid request: schedule data is missing.");
+        }
+
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
         validateLoggedInDoctor(user);
 
         try {
             Long doctorId = user.getUserID();
-
-            // Retrieve the active clinic ID for the doctor
             Long clinicId = doctorClinicRepository.findByDoctorIdAndIsActiveTrue(doctorId)
                     .map(DoctorClinic::getClinicId)
                     .orElseThrow(() -> new IllegalStateException("No active clinic found for the doctor."));
 
-            // Set the doctorId and clinicId in the schedule
+            ScheduleWorkTime schedule = scheduleRequest.getSchedule();
             schedule.setDoctorId(doctorId);
             schedule.setClinicId(clinicId);
 
-            // Add or update the schedule
+            // Move daysOfWeek directly into the schedule object
+            schedule.setDaysOfWeek(scheduleRequest.getDaysOfWeek());
+
             scheduleWorkTimeService.addOrUpdateWorkSchedule(schedule);
 
             return ResponseEntity.ok("Work schedule saved successfully");
@@ -75,6 +80,9 @@ public class ScheduleWorkTimeController extends SessionManagement {
                     .body("Failed to save work schedule: " + ex.getMessage());
         }
     }
+
+
+
 
 
     @GetMapping("/{date}")
