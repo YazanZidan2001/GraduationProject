@@ -1,12 +1,9 @@
 package com.example.GraduationProject.Core.Services;
 
+import com.example.GraduationProject.Common.Entities.*;
 import com.example.GraduationProject.Core.Repositories.*;
 import lombok.RequiredArgsConstructor;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
-import com.example.GraduationProject.Common.Entities.Doctor;
-import com.example.GraduationProject.Common.Entities.Specialization;
-import com.example.GraduationProject.Common.Entities.User;
-import com.example.GraduationProject.Common.Entities.Token;
 import com.example.GraduationProject.Common.Enums.Role;
 import com.example.GraduationProject.Common.Enums.TokenType;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
@@ -271,5 +268,19 @@ public class DoctorService {
                 .revoked(false)
                 .build();
         tokenRepository.save(token);
+    }
+
+
+    @Transactional
+    public Doctor getDoctorDetailsFromToken(String token) throws UserNotFoundException {
+        // Extract user details from the token
+        String email = jwtService.extractUsername(token); // Assuming the email is stored in the token
+
+        // Find the patient by the email associated with the user
+        Doctor doctor = doctorRepository.findByDoctorEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Doctor not found"));
+
+        // Return the full patient object with all relevant details
+        return doctor;
     }
 }

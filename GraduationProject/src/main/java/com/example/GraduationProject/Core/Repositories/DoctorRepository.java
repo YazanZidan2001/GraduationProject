@@ -1,6 +1,7 @@
 package com.example.GraduationProject.Core.Repositories;
 
 import com.example.GraduationProject.Common.Entities.Doctor;
+import com.example.GraduationProject.Common.Entities.Patient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -63,5 +64,8 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
             "        WHERE pd.patient.patientId = :patientId " +
             "        AND cat.category_name = c.category_name)")
     Page<Doctor> findDoctorsByPatientIdAndDiseases(Pageable pageable, @Param("patientId") Long patientId);
+
+    @Query("SELECT d FROM Doctor d WHERE d.user.email = :email AND d.user.isDeleted = false")
+    Optional<Doctor> findByDoctorEmail(@Param("email") String email);
 
 }

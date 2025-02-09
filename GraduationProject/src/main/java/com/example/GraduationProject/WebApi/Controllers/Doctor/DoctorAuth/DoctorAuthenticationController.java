@@ -1,5 +1,6 @@
 package com.example.GraduationProject.WebApi.Controllers.Doctor.DoctorAuth;
 
+import com.example.GraduationProject.Common.Entities.Patient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -68,6 +69,19 @@ public class DoctorAuthenticationController extends SessionManagement {
         // Call the service to change the password
         AuthenticationResponse response = authenticationService.changePasswordForToken(user, oldPassword, newPassword);
         return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/me")
+    public ResponseEntity<Doctor> getDoctorDetails(HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        // Extract token from the request
+        String token = authenticationService.extractToken(httpServletRequest);
+
+        // Get the patient details using the token
+        Doctor doctor = doctorService.getDoctorDetailsFromToken(token);
+
+        // Return the full patient details
+        return ResponseEntity.ok(doctor);
     }
 
 }
