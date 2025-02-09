@@ -57,7 +57,7 @@ public class DiseaseController extends SessionManagement {
     public ResponseEntity<List<Disease>> getAllDiseases(HttpServletRequest request) throws UserNotFoundException {
         String token = authenticationService.extractToken(request);
         User user = authenticationService.extractUserFromToken(token);
-        validateLoggedInAdmin(user);
+        validateLoggedInDoctorOrAdmin(user);
 
         List<Disease> diseases = diseaseService.getAllDiseases();
         return ResponseEntity.ok(diseases);
