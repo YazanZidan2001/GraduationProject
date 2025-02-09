@@ -35,10 +35,10 @@ public class FamilyDisease {
     @NotNull(message = "Disease name cannot be blank")
     private String diseaseName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "disease_type", nullable = false)
-    @NotNull(message = "Disease type cannot be blank")
-    private DiseaseType diseaseType; // Enum for disease type
+//    @Enumerated(EnumType.STRING)
+//    @Column(name = "disease_type", nullable = false)
+//    @NotNull(message = "Disease type cannot be blank")
+//    private DiseaseType diseaseType; // Enum for disease type
 
     @Column(name = "diagnosis_date", nullable = true)
     private LocalDate diagnosisDate; // Optional, when the family member was diagnosed

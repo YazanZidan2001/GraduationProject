@@ -36,7 +36,7 @@ public class FamilyDiseaseService {
 
         existingRecord.setDiagnosisDate(familyDisease.getDiagnosisDate());
         existingRecord.setRemarks(familyDisease.getRemarks());
-        existingRecord.setDiseaseType(familyDisease.getDiseaseType());
+//        existingRecord.setDiseaseType(familyDisease.getDiseaseType());
         existingRecord.setDisease(familyDisease.getDisease());
 
         return familyDiseaseRepository.save(existingRecord);
