@@ -210,6 +210,156 @@ public class PrescriptionController extends SessionManagement {
         }
     }
 
+    /**
+     * GET /prescriptions/my/visit/{visitId}
+     * Retrieves all prescriptions for a specific visit for the logged-in patient.
+     */
+    @GetMapping("/my/visit/{visitId}")
+    public ResponseEntity<?> getPrescriptionsForVisit(
+            @PathVariable Long visitId,
+            HttpServletRequest request
+    ) throws UserNotFoundException {
+
+        // Extract user (ensure it's a patient)
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInPatient(user);
+
+        Long patientId = user.getPatient().getPatientId();
+
+        List<Prescription> prescriptions = prescriptionService.findByVisitIdAndPatientId(visitId, patientId);
+        if (prescriptions.isEmpty()) {
+            return ResponseEntity.ok("No prescriptions found for this visit.");
+        }
+        return ResponseEntity.ok(prescriptions);
+    }
+
+
+    /**
+     * GET /prescriptions/my/visit/{visitId}/prescription/{prescriptionId}
+     * Retrieves a specific prescription for a specific visit for the logged-in patient.
+     */
+    @GetMapping("/my/visit/{visitId}/prescription/{prescriptionId}")
+    public ResponseEntity<?> getPrescriptionForVisit(
+            @PathVariable Long visitId,
+            @PathVariable Long prescriptionId,
+            HttpServletRequest request
+    ) throws UserNotFoundException {
+
+        // Extract user (ensure it's a patient)
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInPatient(user);
+
+        Long patientId = user.getPatient().getPatientId();
+
+        Prescription prescription = prescriptionService.findByVisitIdAndPrescriptionId(visitId, prescriptionId, patientId);
+        if (prescription == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Prescription not found for this visit.");
+        }
+        return ResponseEntity.ok(prescription);
+    }
+
+
+    /**
+     * GET /prescriptions/my/{prescriptionId}
+     * Retrieves a specific prescription for the logged-in patient by prescription ID.
+     */
+    @GetMapping("/my/{prescriptionId}")
+    public ResponseEntity<?> getPrescriptionById(
+            @PathVariable Long prescriptionId,
+            HttpServletRequest request
+    ) throws UserNotFoundException {
+
+        // Extract user (ensure it's a patient)
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInPatient(user);
+
+        Long patientId = user.getPatient().getPatientId();
+
+        Prescription prescription = prescriptionService.findByPrescriptionIdAndPatientId(prescriptionId, patientId);
+        if (prescription == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Prescription not found.");
+        }
+        return ResponseEntity.ok(prescription);
+    }
+
+
+    /**
+     * GET /prescriptions/patient/{patientId}/prescription/{prescriptionId}
+     * Retrieves a specific prescription for a specific patient (accessible by doctors).
+     */
+    @GetMapping("/patient/{patientId}/prescription/{prescriptionId}")
+    public ResponseEntity<?> getPrescriptionForPatient(
+            @PathVariable Long patientId,
+            @PathVariable Long prescriptionId,
+            HttpServletRequest request
+    ) throws UserNotFoundException {
+
+        // Extract user (ensure it's a doctor)
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        Prescription prescription = prescriptionService.findByPrescriptionIdAndPatientId(prescriptionId, patientId);
+        if (prescription == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Prescription not found for this patient.");
+        }
+        return ResponseEntity.ok(prescription);
+    }
+
+
+    /**
+     * GET /prescriptions/patient/{patientId}/visit/{visitId}
+     * Retrieves all prescriptions for a specific visit for a specific patient (accessible by doctors).
+     */
+    @GetMapping("/patient/{patientId}/visit/{visitId}")
+    public ResponseEntity<?> getPrescriptionsForVisitForPatient(
+            @PathVariable Long patientId,
+            @PathVariable Long visitId,
+            HttpServletRequest request
+    ) throws UserNotFoundException {
+
+        // Extract user (ensure it's a doctor)
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        List<Prescription> prescriptions = prescriptionService.findByVisitIdAndPatientId(visitId, patientId);
+        if (prescriptions.isEmpty()) {
+            return ResponseEntity.ok("No prescriptions found for this visit.");
+        }
+        return ResponseEntity.ok(prescriptions);
+    }
+
+
+    /**
+     * GET /prescriptions/patient/{patientId}/visit/{visitId}/prescription/{prescriptionId}
+     * Retrieves a specific prescription for a specific visit for a specific patient (accessible by doctors).
+     */
+    @GetMapping("/patient/{patientId}/visit/{visitId}/prescription/{prescriptionId}")
+    public ResponseEntity<?> getPrescriptionForVisitForPatient(
+            @PathVariable Long patientId,
+            @PathVariable Long visitId,
+            @PathVariable Long prescriptionId,
+            HttpServletRequest request
+    ) throws UserNotFoundException {
+
+        // Extract user (ensure it's a doctor)
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        Prescription prescription = prescriptionService.findByVisitIdAndPrescriptionId(visitId, prescriptionId, patientId);
+        if (prescription == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Prescription not found for this visit and patient.");
+        }
+        return ResponseEntity.ok(prescription);
+    }
+
+
+
     @PutMapping("/deactivate/{prescriptionId}")
     public ResponseEntity<?> deactivateMedication(
             @PathVariable Long prescriptionId,

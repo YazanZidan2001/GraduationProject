@@ -181,6 +181,23 @@ public class PrescriptionService {
                 .toList();
     }
 
+    public List<Prescription> findByVisitIdAndPatientId(Long visitId, Long patientId) {
+        return prescriptionRepository.findByVisitIdAndPatientId(visitId, patientId);
+    }
+
+    public Prescription findByVisitIdAndPrescriptionId(Long visitId, Long prescriptionId, Long patientId) {
+        return prescriptionRepository.findByVisitIdAndPrescriptionIdAndPatientId(visitId, prescriptionId, patientId)
+                .orElse(null);
+    }
+
+    public Prescription findByPrescriptionIdAndPatientId(Long prescriptionId, Long patientId) {
+        return prescriptionRepository.findByPrescriptionIdAndPatientId(prescriptionId, patientId)
+                .orElse(null);
+    }
+
+
+
+
 
     @Transactional
     public void deactivateMedication(Long prescriptionId, Long doctorUserId) {

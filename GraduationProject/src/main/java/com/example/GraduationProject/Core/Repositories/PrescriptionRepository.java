@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PrescriptionRepository extends JpaRepository<Prescription, Long> {
@@ -25,4 +26,10 @@ public interface PrescriptionRepository extends JpaRepository<Prescription, Long
             List<Prescription> findOldPrescriptions(@Param("patientId") Long patientId,
             @Param("today") LocalDate today);
 
+
+    List<Prescription> findByVisitIdAndPatientId(Long visitId, Long patientId);
+
+    Optional<Prescription> findByVisitIdAndPrescriptionIdAndPatientId(Long visitId, Long prescriptionId, Long patientId);
+
+    Optional<Prescription> findByPrescriptionIdAndPatientId(Long prescriptionId, Long patientId);
 }
