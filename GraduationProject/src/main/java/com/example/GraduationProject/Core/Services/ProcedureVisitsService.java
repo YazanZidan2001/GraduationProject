@@ -74,4 +74,38 @@ public class ProcedureVisitsService {
         return procedureVisitsRepository.findByVisitId(visitID);
     }
 
+
+    /**
+     * Get all procedures for a specific patient.
+     */
+    public List<ProcedureVisits> getProceduresForPatient(Long patientId) {
+        return procedureVisitsRepository.findByPatientId(patientId);
+    }
+
+    /**
+     * Get all procedures for a specific visit and patient.
+     */
+    public List<ProcedureVisits> getProceduresForVisitForPatient(Long visitID, Long patientId) {
+        return procedureVisitsRepository.findByVisitIDAndPatientId(visitID, patientId);
+    }
+
+    /**
+     * Get a specific procedure by procedure ID and patient ID.
+     */
+    public ProcedureVisits getProcedureByIdForPatient(Long procedureVisitId, Long patientId) {
+        return procedureVisitsRepository.findByProcedureVisitIdAndPatientId(procedureVisitId, patientId)
+                .orElse(null);
+    }
+
+    /**
+     * Get a specific procedure for a specific visit and patient.
+     */
+    public ProcedureVisits getProcedureForVisitForPatient(Long visitID, Long procedureVisitId, Long patientId) {
+        return procedureVisitsRepository.findByVisitIDAndProcedureVisitIdAndPatientId(visitID, procedureVisitId, patientId)
+                .orElse(null);
+    }
+
 }
+
+
+

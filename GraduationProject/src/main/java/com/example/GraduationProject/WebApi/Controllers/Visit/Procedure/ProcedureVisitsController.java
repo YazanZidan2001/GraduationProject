@@ -147,4 +147,136 @@ public class ProcedureVisitsController extends SessionManagement {
         return ResponseEntity.ok(procedures);
     }
 
+
+    /**
+     * GET /procedure/my
+     * Retrieves all procedures for the logged-in patient.
+     */
+    @GetMapping("/my")
+    public ResponseEntity<?> getMyProcedures(HttpServletRequest request) throws UserNotFoundException {
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInPatient(user);
+
+        Long patientId = user.getPatient().getPatientId();
+        List<ProcedureVisits> procedures = procedureVisitsService.getProceduresForPatient(patientId);
+
+        if (procedures.isEmpty()) {
+            return ResponseEntity.ok("No procedures found.");
+        }
+        return ResponseEntity.ok(procedures);
+    }
+
+    /**
+     * GET /procedure/my/visit/{visitId}
+     * Retrieves all procedures for a specific visit for the logged-in patient.
+     */
+    @GetMapping("/my/visit/{visitId}")
+    public ResponseEntity<?> getProceduresForVisit(
+            @PathVariable Long visitId,
+            HttpServletRequest request
+    ) throws UserNotFoundException {
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInPatient(user);
+
+        Long patientId = user.getPatient().getPatientId();
+        List<ProcedureVisits> procedures = procedureVisitsService.getProceduresForVisitForPatient(visitId, patientId);
+
+        if (procedures.isEmpty()) {
+            return ResponseEntity.ok("No procedures found for this visit.");
+        }
+        return ResponseEntity.ok(procedures);
+    }
+
+    /**
+     * GET /procedure/my/visit/{visitId}/procedure/{procedureVisitId}
+     * Retrieves a specific procedure for a specific visit for the logged-in patient.
+     */
+    @GetMapping("/my/visit/{visitId}/procedure/{procedureVisitId}")
+    public ResponseEntity<?> getProcedureForVisit(
+            @PathVariable Long visitId,
+            @PathVariable Long procedureVisitId,
+            HttpServletRequest request
+    ) throws UserNotFoundException {
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInPatient(user);
+
+        Long patientId = user.getPatient().getPatientId();
+        ProcedureVisits procedure = procedureVisitsService.getProcedureForVisitForPatient(visitId, procedureVisitId, patientId);
+
+        if (procedure == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Procedure not found for this visit.");
+        }
+        return ResponseEntity.ok(procedure);
+    }
+
+    /**
+     * GET /procedure/my/{procedureVisitId}
+     * Retrieves a specific procedure for the logged-in patient by procedure ID.
+     */
+    @GetMapping("/my/{procedureVisitId}")
+    public ResponseEntity<?> getProcedureById(
+            @PathVariable Long procedureVisitId,
+            HttpServletRequest request
+    ) throws UserNotFoundException {
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInPatient(user);
+
+        Long patientId = user.getPatient().getPatientId();
+        ProcedureVisits procedure = procedureVisitsService.getProcedureByIdForPatient(procedureVisitId, patientId);
+
+        if (procedure == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Procedure not found.");
+        }
+        return ResponseEntity.ok(procedure);
+    }
+
+    /**
+     * GET /procedure/patient/{patientId}/procedure/{procedureVisitId}
+     * Retrieves a specific procedure for a specific patient (accessible by doctors).
+     */
+    @GetMapping("/patient/{patientId}/procedure/{procedureVisitId}")
+    public ResponseEntity<?> getProcedureForPatient(
+            @PathVariable Long patientId,
+            @PathVariable Long procedureVisitId,
+            HttpServletRequest request
+    ) throws UserNotFoundException {
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        ProcedureVisits procedure = procedureVisitsService.getProcedureByIdForPatient(procedureVisitId, patientId);
+
+        if (procedure == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Procedure not found for this patient.");
+        }
+        return ResponseEntity.ok(procedure);
+    }
+
+    /**
+     * GET /procedure/patient/{patientId}/visit/{visitId}
+     * Retrieves all procedures for a specific visit for a specific patient (accessible by doctors).
+     */
+    @GetMapping("/patient/{patientId}/visit/{visitId}")
+    public ResponseEntity<?> getProceduresForVisitForPatient(
+            @PathVariable Long patientId,
+            @PathVariable Long visitId,
+            HttpServletRequest request
+    ) throws UserNotFoundException {
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        List<ProcedureVisits> procedures = procedureVisitsService.getProceduresForVisitForPatient(visitId, patientId);
+        if (procedures.isEmpty()) {
+            return ResponseEntity.ok("No procedures found for this visit.");
+        }
+        return ResponseEntity.ok(procedures);
+    }
+
+
+
 }
