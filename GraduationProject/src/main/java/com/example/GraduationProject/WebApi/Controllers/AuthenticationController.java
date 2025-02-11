@@ -1,6 +1,7 @@
 package com.example.GraduationProject.WebApi.Controllers;
 
 
+import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
@@ -109,23 +110,6 @@ public class AuthenticationController extends SessionManagement {
     }
 
 
-    @PostMapping("/choose-verification-method")
-    public ResponseEntity<GeneralResponse> chooseVerificationMethod(
-            @RequestParam String contactInfo, // User's contact info (email or phone)
-            @RequestParam String method // "email" or "phone"
-    ) throws UserNotFoundException, IOException {
-        // Retrieve the user by contact info (either email or phone)
-        User user = authenticationService.getUserByContactInfo(contactInfo);
-
-        // Set the preferred verification method and save it to the database
-        user.setPreferred2faMethod(method);
-        authenticationService.updateUser(user);
-
-        // Send the verification code based on the chosen method
-        verificationService.sendVerificationCode(user);
-
-        return ResponseEntity.ok(new GeneralResponse("Verification code sent via " + method, true));
-    }
     @PostMapping("/refresh-token")
     public void refreshToken(
             HttpServletRequest request,
@@ -133,6 +117,8 @@ public class AuthenticationController extends SessionManagement {
     ) throws IOException {
         authenticationService.refreshToken(request, response);
     }
+
+
     @PostMapping("/send-verification-code-to-resetPassword")
     public ResponseEntity<String> sendPasswordResetEmail(@RequestParam String email) throws UserNotFoundException, MessagingException, MessagingException {
         authenticationService.sendPasswordResetEmail(email);
@@ -150,9 +136,21 @@ public class AuthenticationController extends SessionManagement {
     }
 
     @PostMapping("")
-    public ResponseEntity<AuthenticationResponse> RegisterPatient(@RequestBody @Valid Patient request , HttpServletRequest httpServletRequest) throws UserNotFoundException {
-        return new ResponseEntity<>(patientService.addPatient(request), HttpStatus.CREATED);
+    public ResponseEntity<?> RegisterPatient(@RequestBody @Valid Patient request, HttpServletRequest httpServletRequest) {
+        try {
+            return new ResponseEntity<>(patientService.addPatient(request), HttpStatus.CREATED);
+
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found: " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
+        }
     }
+
+
     @GetMapping("/getUser")
     public User getUser(@RequestHeader("Authorization") String request) {
         String token = request.replace("Bearer ", "");
@@ -187,54 +185,74 @@ public class AuthenticationController extends SessionManagement {
     }
 
 
-
-
-    @PostMapping("/send-verification-code")
-    public ResponseEntity<String> sendVerificationCode(
-            @RequestParam String contactInfo, // Either email or phone
+    @PostMapping("/choose-verification-method")
+    public ResponseEntity<GeneralResponse> chooseVerificationMethod(
+            @RequestParam String contactInfo, // User's contact info (email or phone)
             @RequestParam String method // "email" or "phone"
-    ) throws UserNotFoundException, IOException {
+    ) throws UserNotFoundException, IOException, NotFoundException {
+        System.out.println("Contact info = [" + contactInfo + "]");
+
         // Retrieve the user by contact info (either email or phone)
         User user = authenticationService.getUserByContactInfo(contactInfo);
 
-        // Set the user's preferred method for sending the verification code
+        // Set the preferred verification method and save it to the database
         user.setPreferred2faMethod(method);
+        authenticationService.updateUser(user);
 
-        // Use the VerificationService to send the verification code
+        // Send the verification code based on the chosen method
         verificationService.sendVerificationCode(user);
 
-        return ResponseEntity.ok("Verification code sent via " + method);
+        return ResponseEntity.ok(new GeneralResponse("Verification code sent via " + method, true));
     }
 
     @PostMapping("/verify-code")
     public ResponseEntity<AuthenticationResponse> verifyCode(
             @RequestParam String contactInfo,
             @RequestParam String code
-    ) throws UserNotFoundException {
-        // Retrieve the user by contact info (either email or phone)
-        User user = authenticationService.getUserByContactInfo(contactInfo);
+    ) {
+        try {
+            // 1. Retrieve user safely
+            User user = authenticationService.getUserByContactInfo(contactInfo);
+            if (user == null) {
+                // Hide "user not found" details from the client if you prefer
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(AuthenticationResponse.builder()
+                                .message("Invalid or expired verification code")
+                                .build());
+            }
 
-        // Verify the provided code using the VerificationService
-        boolean isCodeValid = verificationService.verifyCode(user, code);
+            // 2. Verify the provided code
+            boolean isCodeValid = verificationService.verifyCode(user, code);
 
-        if (isCodeValid) {
-            // Code is valid, generate access and refresh tokens
-            var jwtToken = jwtService.generateToken(user);
-            var refreshToken = jwtService.generateRefreshToken(user);
-            authenticationService.revokeAllUserTokens(user);
-            authenticationService.saveUserToken(user, jwtToken);
+            // 3. If valid, proceed with login
+            if (isCodeValid) {
+                // Generate tokens
+                var jwtToken = jwtService.generateToken(user);
+                var refreshToken = jwtService.generateRefreshToken(user);
 
-            return ResponseEntity.ok(AuthenticationResponse.builder()
-                    .accessToken(jwtToken)
-                    .refreshToken(refreshToken)
-                    .role(user.getRole())
-                    .message("Login completed successfully with two-factor authentication.")
-                    .build());
-        } else {
-            // Code is invalid
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                // Revoke old tokens & save new one
+                authenticationService.revokeAllUserTokens(user);
+                authenticationService.saveUserToken(user, jwtToken);
+
+                return ResponseEntity.ok(AuthenticationResponse.builder()
+                        .accessToken(jwtToken)
+                        .refreshToken(refreshToken)
+                        .role(user.getRole())
+                        .message("Login completed successfully with two-factor authentication.")
+                        .build());
+            } else {
+                // 4. Invalid code
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(AuthenticationResponse.builder()
+                                .message("Invalid or expired verification code")
+                                .build());
+            }
+        } catch (Exception e) {
+            // 5. Log the exception & return a generic error
+            // e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(AuthenticationResponse.builder()
-                            .message("Invalid or expired verification code")
+                            .message("An error occurred during verification")
                             .build());
         }
     }

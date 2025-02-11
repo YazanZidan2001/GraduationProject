@@ -48,6 +48,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import static org.hibernate.query.sqm.tree.SqmNode.log;
+
 
 @Service
 @RequiredArgsConstructor
@@ -157,7 +159,6 @@ public class AuthenticationService extends SessionManagement {
 
 
     public User getUserByContactInfo(String contactInfo) throws UserNotFoundException {
-        // Check if contactInfo matches email format
         if (contactInfo.contains("@")) {
             return repository.findByEmail(contactInfo)
                     .orElseThrow(() -> new UserNotFoundException("User not found with provided email: " + contactInfo));

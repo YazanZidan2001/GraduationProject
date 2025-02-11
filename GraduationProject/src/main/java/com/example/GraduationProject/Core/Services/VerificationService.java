@@ -4,6 +4,7 @@ import com.example.GraduationProject.Common.Entities.User;
 import com.example.GraduationProject.Common.Entities.VerificationCode;
 import com.example.GraduationProject.Core.Repositories.UserRepository;
 import com.example.GraduationProject.Core.Repositories.VerificationCodeRepository;
+import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import com.sendgrid.*;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
@@ -20,6 +21,7 @@ import com.sendgrid.helpers.mail.objects.Email;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -55,10 +57,18 @@ public class VerificationService {
     }
 
     // Sends verification code based on user preference
-    public void sendVerificationCode(User user) throws IOException {
+    public void sendVerificationCode(User user) throws IOException, NotFoundException {
+        // 1. Check if user already requested a code in the last X minutes
+        if (hasRequestedTooOften(user)) {
+            throw new NotFoundException("Too many requests. Please try again later.");
+        }
+
         String code = generateVerificationCode();
 
-        // Save the code in the database
+        // (Optional) Invalidate old codes for this user if you only allow 1 code at a time
+        markOldCodesAsUsedOrExpired(user);
+
+        // 2. Save the code
         VerificationCode verificationCode = VerificationCode.builder()
                 .code(code)
                 .expirationTime(LocalDateTime.now().plusMinutes(5))
@@ -67,13 +77,39 @@ public class VerificationService {
                 .build();
         verificationCodeRepository.save(verificationCode);
 
-        // Send the code via the preferred method
+        // 3. Send the code (SMS or email)
         if ("phone".equalsIgnoreCase(user.getPreferred2faMethod())) {
             sendSmsCode(user.getPhone(), code);
-        } else if ("email".equalsIgnoreCase(user.getPreferred2faMethod())) {
+        } else {
             sendEmailCode(user.getEmail(), code);
         }
     }
+
+    private boolean hasRequestedTooOften(User user) {
+        // Pseudo-logic: check how many codes were created in the last X minutes
+        LocalDateTime boundary = LocalDateTime.now().minusMinutes(1);
+        long recentRequestsCount = verificationCodeRepository.countRecentRequests(user, boundary);
+
+        // e.g., limit to 3 requests per minute
+        return recentRequestsCount >= 3;
+    }
+
+
+    public void markOldCodesAsUsedOrExpired(User user) {
+        // 1. Retrieve all VerificationCode records for this user that are still "unused"
+        List<VerificationCode> activeCodes = verificationCodeRepository.findAllByUserAndIsUsedFalse(user);
+
+        // 2. Mark them as used
+        for (VerificationCode code : activeCodes) {
+            code.setUsed(true);
+            // Optionally, set expirationTime to now if you prefer
+            // code.setExpirationTime(LocalDateTime.now());
+        }
+
+        // 3. Save all changes
+        verificationCodeRepository.saveAll(activeCodes);
+    }
+
 
     // Sends SMS using Twilio
     private void sendSmsCode(String phoneNumber, String code) {
