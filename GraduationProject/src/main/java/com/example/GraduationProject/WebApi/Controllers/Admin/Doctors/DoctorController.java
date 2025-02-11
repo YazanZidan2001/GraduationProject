@@ -14,6 +14,7 @@ import com.example.GraduationProject.Core.Services.AuthenticationService;
 import com.example.GraduationProject.SessionManagement;
 import com.example.GraduationProject.WebApi.Exceptions.UserNotFoundException;
 import com.example.GraduationProject.Common.Responses.AuthenticationResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,26 +28,37 @@ public class DoctorController extends SessionManagement {
     private final CategoryRepository categoryRepository;
 
     @PostMapping("/")
-    public ResponseEntity<AuthenticationResponse> addDoctor(
+    public ResponseEntity<?> addDoctor(
             @RequestBody @Valid Doctor request,
-            HttpServletRequest httpServletRequest) throws Exception {
-           System.out.println("Incoming request: " + request);
+            HttpServletRequest httpServletRequest) {
+        try {
+            System.out.println("Incoming request: " + request);
 
-        // Extract and validate the user from the token
-        String token = authenticationService.extractToken(httpServletRequest);
-        User user = authenticationService.extractUserFromToken(token);
-        validateLoggedInAdmin(user);
+            // Extract and validate the user from the token
+            String token = authenticationService.extractToken(httpServletRequest);
+            User user = authenticationService.extractUserFromToken(token);
+            validateLoggedInAdmin(user);
 
-        // Validate mandatory fields
-        if (request.getSpecial_name() == null || request.getSpecial_name().isEmpty()) {
-            throw new IllegalArgumentException("Specialization must be provided");
+            // Validate mandatory fields
+            if (request.getSpecial_name() == null || request.getSpecial_name().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Specialization must be provided");
+            }
+            if (request.getGender() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Gender must be provided");
+            }
+
+            return ResponseEntity.ok(doctorService.addDoctor(request));
+
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found: " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
         }
-        if (request.getGender() == null) {
-            throw new IllegalArgumentException("Gender must be provided");
-        }
-
-        return ResponseEntity.ok(doctorService.addDoctor(request));
     }
+
 
 
     @PutMapping ("/{doctorId}")

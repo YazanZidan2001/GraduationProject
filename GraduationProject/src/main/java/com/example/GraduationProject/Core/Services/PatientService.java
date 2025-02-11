@@ -129,42 +129,38 @@ public class PatientService {
         User user = request.getUser();
 
         // Check if a user with the same email already exists
-        User existingUser = userRepository.findByEmail(user.getEmail()).orElse(null);
-
-        if (existingUser != null) {
-            // Check if the existing user already has an associated patient
-            if (existingUser.getPatient() != null) {
-                throw new UserNotFoundException("User already has an associated patient");
-            } else {
-                // Reuse the existing user
-                user = existingUser;
-            }
-        } else {
-            // Manually set the UserID from the request (ensure the ID is provided in the JSON)
-            user.setUserID(request.getPatientId());
-
-            // Set role and encode password for the new user
-            user.setRole(Role.PATIENT);
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            user.setActive(true);
-
-            // Save the new user
-            user = userRepository.save(user);
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new IllegalArgumentException("A user with this email already exists.");
         }
 
-        // Create a new Patient instance
+        // Check if a user with the same phone number already exists
+        if (userRepository.existsByPhone(user.getPhone())) {
+            throw new IllegalArgumentException("A user with this phone number already exists.");
+        }
+
+        // Check if a user with the same ID already exists
+        if (userRepository.existsById(request.getPatientId())) {
+            throw new IllegalArgumentException("A user with this ID already exists.");
+        }
+
+        // Create and save new user
+        user.setUserID(request.getPatientId());
+        user.setRole(Role.PATIENT);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setActive(true);
+        user = userRepository.save(user);
+
+        // Create and save new patient
         Patient patient = Patient.builder()
                 .patientId(user.getUserID())  // Set patientId to match UserID
                 .user(user)                   // Associate with the created/reused user
                 .bloodType(request.getBloodType()) // Directly use the BloodTypes enum
                 .gender(request.getGender())
-//                .dateOfBirth(request.getDateOfBirth())
                 .height(request.getHeight())
                 .weight(request.getWeight())
                 .remarks(request.getRemarks())
                 .build();
 
-        // Save the new patient
         patientRepository.save(patient);
 
         // Generate JWT tokens for the user
@@ -178,6 +174,7 @@ public class PatientService {
                 .message("Patient added successfully")
                 .build();
     }
+
 
 
 

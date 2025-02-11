@@ -43,5 +43,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.role=:role AND u.isDeleted = false  " )
     List<User> findAllByRole(@Param("role")Role role);
 
+    boolean existsByEmail(String email);
+
+    boolean existsByPhone(String phone);
+
+    boolean existsById(Long userID);
+
 }
 

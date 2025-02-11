@@ -44,14 +44,24 @@ public class PatientController extends SessionManagement {
     }
 
     @PostMapping("/addPatient")
-    public ResponseEntity<AuthenticationResponse> addPatient(@RequestBody @Valid Patient request , HttpServletRequest httpServletRequest) throws UserNotFoundException {
+    public ResponseEntity<?> addPatient(@RequestBody @Valid Patient request, HttpServletRequest httpServletRequest) {
+        try {
+            String token = service.extractToken(httpServletRequest);
+            User user = service.extractUserFromToken(token);
+            validateLoggedInDoctorOrAdmin(user);
 
-        String token = service.extractToken(httpServletRequest);
-        User user = service.extractUserFromToken(token);
-        validateLoggedInDoctorOrAdmin(user);
+            return new ResponseEntity<>(patientService.addPatient(request), HttpStatus.CREATED);
 
-        return new ResponseEntity<>(patientService.addPatient(request), HttpStatus.CREATED);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found: " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + ex.getMessage());
+        }
     }
+
 
 
 

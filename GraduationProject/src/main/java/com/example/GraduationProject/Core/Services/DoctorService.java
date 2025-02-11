@@ -44,36 +44,40 @@ public class DoctorService {
         User user = request.getUser();
 
         // Check if a user with the same email already exists
-        User existingUser = userRepository.findByEmail(user.getEmail()).orElse(null);
-
-        if (existingUser != null) {
-            if (existingUser.getDoctor() != null) {
-                throw new UserNotFoundException("User already has an associated doctor");
-            } else {
-                user = existingUser;
-            }
-        } else {
-            user.setUserID(request.getDoctorId());
-            user.setRole(Role.DOCTOR);
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            user.setActive(true);
-            user = userRepository.save(user);
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new IllegalArgumentException("A user with this email already exists.");
         }
+
+        // Check if a user with the same phone number already exists
+        if (userRepository.existsByPhone(user.getPhone())) {
+            throw new IllegalArgumentException("A user with this phone number already exists.");
+        }
+
+        // Check if a user with the same ID already exists
+        if (userRepository.existsById(request.getDoctorId())) {
+            throw new IllegalArgumentException("A user with this ID already exists.");
+        }
+
+        // Create and save new user
+        user.setUserID(request.getDoctorId());
+        user.setRole(Role.DOCTOR);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setActive(true);
+        user = userRepository.save(user);
 
         // Fetch specialization using the special_name
         Specialization specialization = specializationRepository.findById(request.getSpecial_name())
                 .orElseThrow(() -> new UserNotFoundException("Specialization not found"));
 
-        // Create Doctor object
+        // Create and save new doctor
         Doctor doctor = Doctor.builder()
                 .doctorId(user.getUserID())
                 .user(user)
-                .specialization(specialization) // Set the fetched specialization
+                .specialization(specialization)
                 .gender(request.getGender())
                 .bio(request.getBio())
                 .build();
 
-        // Save Doctor
         doctorRepository.save(doctor);
 
         // Generate JWT tokens
@@ -87,6 +91,7 @@ public class DoctorService {
                 .message("Doctor added successfully")
                 .build();
     }
+
 
 
     @Transactional
