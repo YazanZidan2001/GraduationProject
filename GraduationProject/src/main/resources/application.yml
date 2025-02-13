@@ -38,17 +38,10 @@ spring:
       enabled: true
       max-request-size: 10MB
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/railway
+    url: jdbc:mysql://localhost:3306/graduation_project3
     username: root
-    password: yazan0599050309
+    password:  # No password for the database
     driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      minimum-idle: 5
-      maximum-pool-size: 20
-      idle-timeout: 30000
-      pool-name: HikariCP
-      max-lifetime: 1800000
-      connection-timeout: 20000
   web:
     resources:
       cache:
