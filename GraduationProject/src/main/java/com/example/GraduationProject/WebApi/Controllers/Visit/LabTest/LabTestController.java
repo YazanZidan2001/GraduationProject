@@ -258,15 +258,17 @@ public class LabTestController extends SessionManagement {
     }
 
     @GetMapping("/{testId}/download-result")
-    public ResponseEntity<Resource> downloadLabTestResult(@PathVariable Long testId) throws IOException {
+    public ResponseEntity<?> downloadLabTestResult(@PathVariable Long testId) throws IOException, NotFoundException {
         LabTest labTest = labTestService.getLabTestById(testId);
         String path = labTest.getResultFilePath();
-        if (path == null) {
-            return ResponseEntity.notFound().build();
+
+        if (path == null || path.isEmpty()) {
+            return ResponseEntity.ok("No result found for this lab test.");
         }
+
         File file = new File(path);
         if (!file.exists()) {
-            return ResponseEntity.notFound().build();
+            throw new NotFoundException("Lab Test result file not found at the specified path.");
         }
 
         Resource resource = new UrlResource(file.toURI());
@@ -279,6 +281,7 @@ public class LabTestController extends SessionManagement {
                 .contentType(MediaType.parseMediaType(contentType))
                 .body(resource);
     }
+
 
 
 }

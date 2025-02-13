@@ -57,9 +57,9 @@ public class PatientDiseaseService {
     // Get all diseases for a specific patient
     public List<PatientDisease> getDiseasesByPatientId(Long patientId) throws NotFoundException {
         List<PatientDisease> diseases = patientDiseaseRepository.findByPatient_PatientId(patientId);
-        if (diseases.isEmpty()) {
-            throw new NotFoundException("No diseases found for patient with ID " + patientId);
-        }
+//        if (diseases.isEmpty()) {
+//            throw new NotFoundException("No diseases found for patient with ID " + patientId);
+//        }
         return diseases;
     }
 
