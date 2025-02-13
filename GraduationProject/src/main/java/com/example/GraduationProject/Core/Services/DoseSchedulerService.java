@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -103,4 +104,19 @@ public class DoseSchedulerService {
         LocalDate today = LocalDate.now();
         return doseScheduleRepository.findByPatientIdAndDoseDate(patientId, today);
     }
+
+    public Optional<DoseSchedule> findById(Long doseId) {
+        return doseScheduleRepository.findById(doseId);
+    }
+
+    public void save(DoseSchedule doseSchedule) {
+        doseScheduleRepository.save(doseSchedule);
+    }
+
+    public List<DoseSchedule> getUnTakenDosesForToday(Long patientId) {
+        LocalDate today = LocalDate.now();
+        return doseScheduleRepository.findByPatientIdAndDoseDateAndDoseTakenFalse(patientId, today);
+    }
+
+
 }

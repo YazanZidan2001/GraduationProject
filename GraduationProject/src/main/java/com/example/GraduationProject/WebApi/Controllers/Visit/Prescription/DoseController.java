@@ -52,5 +52,55 @@ public class DoseController extends SessionManagement {
                     .body("Error retrieving today's doses: " + ex.getMessage());
         }
     }
+
+    @GetMapping("/today/untaken")
+    public ResponseEntity<?> getUnTakenDoses(HttpServletRequest request) throws UserNotFoundException {
+        // 1) استخراج المستخدم من التوكن
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+
+        // 2) التأكد أن المستخدم هو مريض
+        validateLoggedInPatient(user);
+
+        // 3) جلب ID المريض
+        Long patientId = user.getUserID();
+
+        try {
+            // 4) جلب الجرعات غير المأخوذة
+            List<DoseSchedule> doses = doseScheduleService.getUnTakenDosesForToday(patientId);
+
+            if (doses.isEmpty()) {
+                return ResponseEntity.ok("No untaken doses for today.");
+            }
+            return ResponseEntity.ok(doses);
+
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving untaken doses: " + ex.getMessage());
+        }
+    }
+
+
+    @PutMapping("/{doseId}/mark-as-taken")
+    public ResponseEntity<?> markDoseAsTaken(@PathVariable Long doseId, HttpServletRequest request) throws UserNotFoundException, NotFoundException {
+        // 1) استخراج المستخدم من التوكن
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+
+        // 2) التأكد أن المستخدم هو مريض
+        validateLoggedInPatient(user);
+
+        // 3) البحث عن الجرعة
+        DoseSchedule dose = doseScheduleService.findById(doseId)
+                .orElseThrow(() -> new NotFoundException("Dose not found"));
+
+        // 4) تحديث الجرعة إلى "تم أخذها"
+        dose.setDoseTaken(true);
+        doseScheduleService.save(dose);
+
+        return ResponseEntity.ok("Dose marked as taken.");
+    }
+
 }
 

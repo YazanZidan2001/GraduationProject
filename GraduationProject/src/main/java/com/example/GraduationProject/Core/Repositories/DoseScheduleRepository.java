@@ -13,5 +13,6 @@ public interface DoseScheduleRepository extends JpaRepository<DoseSchedule, Long
     // Additional custom queries if needed
     void deleteByDoseDateBefore(LocalDate date);
     List<DoseSchedule> findByPatientIdAndDoseDate(Long patientId, LocalDate doseDate);
+    List<DoseSchedule> findByPatientIdAndDoseDateAndDoseTakenFalse(Long patientId, LocalDate doseDate);
 
 }
