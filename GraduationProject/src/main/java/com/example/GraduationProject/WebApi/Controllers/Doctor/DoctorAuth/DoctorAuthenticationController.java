@@ -41,6 +41,26 @@ public class DoctorAuthenticationController extends SessionManagement {
         return ResponseEntity.ok(avgRating);
     }
 
+    @PutMapping("/updateProfile")
+    public ResponseEntity<GeneralResponse> updateDoctorProfile(@RequestBody @Valid Doctor request,
+                                                               HttpServletRequest httpServletRequest)
+            throws UserNotFoundException {
+        // استخراج الـ Token من الطلب
+        String token = authenticationService.extractToken(httpServletRequest);
+
+        // استخراج المستخدم من التوكن
+        User user = authenticationService.extractUserFromToken(token);
+
+        // التحقق من أن المستخدم هو طبيب
+        validateLoggedInDoctor(user);
+
+        // تحديث بيانات الطبيب
+        GeneralResponse response = doctorService.updateDoctorProfile(user.getUserID(), request);
+
+        return ResponseEntity.ok(response);
+    }
+
+
     @PutMapping("/{email}")
     public ResponseEntity<GeneralResponse> updateDoctor(@RequestBody @Valid Doctor request, @PathVariable String email, HttpServletRequest httpServletRequest) throws UserNotFoundException {
         String token = authenticationService.extractToken(httpServletRequest);

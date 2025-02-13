@@ -1,6 +1,7 @@
 package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.Common.Entities.*;
+import com.example.GraduationProject.Common.Responses.GeneralResponse;
 import com.example.GraduationProject.Core.Repositories.*;
 import lombok.RequiredArgsConstructor;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
@@ -92,6 +93,47 @@ public class DoctorService {
                 .build();
     }
 
+
+
+    @Transactional
+    public GeneralResponse updateDoctorProfile(Long doctorId, Doctor request) throws UserNotFoundException {
+        // البحث عن الطبيب بواسطة ID
+        var doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new UserNotFoundException("Doctor not found"));
+
+        // الحصول على بيانات المستخدم المرتبطة بالطبيب
+        var user = doctor.getUser();
+
+        // تحديث معلومات المستخدم
+        if (request.getUser().getFirstName() != null) {
+            user.setFirstName(request.getUser().getFirstName());
+        }
+        if (request.getUser().getLastName() != null) {
+            user.setLastName(request.getUser().getLastName());
+        }
+        if (request.getUser().getPhone() != null) {
+            user.setPhone(request.getUser().getPhone());
+        }
+        if (request.getUser().getDateOfBirth() != null) {
+            user.setDateOfBirth(request.getUser().getDateOfBirth());
+        }
+
+        // تحديث معلومات الطبيب
+        if (request.getBio() != null) {
+            doctor.setBio(request.getBio());
+        }
+        if (request.getSpecialization() != null) {
+            doctor.setSpecialization(request.getSpecialization());
+        }
+
+        // حفظ التعديلات في قاعدة البيانات
+        userRepository.save(user);
+        doctorRepository.save(doctor);
+
+        return GeneralResponse.builder()
+                .message("Doctor profile updated successfully")
+                .build();
+    }
 
 
     @Transactional

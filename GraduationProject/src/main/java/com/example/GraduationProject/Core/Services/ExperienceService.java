@@ -16,8 +16,11 @@ public class ExperienceService {
     private final ExperienceRepository experienceRepository;
 
     public Experience addExperience(Experience experience) {
+        Long nextId = experienceRepository.findMaxExperienceIdByDoctorId(experience.getDoctorId());
+        experience.setExperienceId(nextId != null ? nextId + 1 : 1);  // Auto-increment logic
         return experienceRepository.save(experience);
     }
+
 
     public List<Experience> getExperiencesByDoctorId(Long doctorId) throws NotFoundException {
         List<Experience> experiences = experienceRepository.findByDoctorId(doctorId);

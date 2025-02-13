@@ -16,6 +16,8 @@ public class QualificationService {
 
     // Add a new qualification
     public Qualification addQualification(Qualification qualification) {
+        Long nextId = qualificationRepository.findMaxQualificationIdByDoctorId(qualification.getDoctorId());
+        qualification.setQualificationId(nextId != null ? nextId + 1 : 1);  // Auto-increment logic
         return qualificationRepository.save(qualification);
     }
 
