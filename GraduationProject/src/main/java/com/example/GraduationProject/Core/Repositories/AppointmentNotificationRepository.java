@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AppointmentNotificationRepository extends JpaRepository<AppointmentNotification, AppointmentCompositeKey> {
@@ -16,5 +16,9 @@ public interface AppointmentNotificationRepository extends JpaRepository<Appoint
     List<AppointmentNotification> findByDateAndTimeAndIsSendFalse(LocalDate date, String time);
 
     List<AppointmentNotification> findByPatientIDAndIsSendFalse(Long patientID);
+
+    Optional<AppointmentNotification> findByAppointmentID(Long appointmentID);
+
+
 
 }

@@ -265,12 +265,12 @@ public class XRayController extends SessionManagement {
     }
 
     @GetMapping("/{xrayId}/download-result")
-    public ResponseEntity<?> downloadXRayResult(@PathVariable Long xrayId) throws IOException, NotFoundException {
+    public ResponseEntity<Resource> downloadXRayResult(@PathVariable Long xrayId) throws IOException, NotFoundException {
         XRay xray = xRayService.getXRayById(xrayId);
         String path = xray.getResultFilePath();
 
         if (path == null || path.isEmpty()) {
-            return ResponseEntity.ok("No result found for this X_Ray.");
+            throw new NotFoundException("X-Ray result not found for ID: " + xrayId);
         }
 
         File file = new File(path);

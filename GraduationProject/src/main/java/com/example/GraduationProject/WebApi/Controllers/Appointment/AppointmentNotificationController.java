@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/notifications")
+@RequestMapping("/appointments/notifications")
 @RequiredArgsConstructor
 public class AppointmentNotificationController {
     private final AppointmentNotificationRepository notificationRepository;
@@ -27,4 +27,17 @@ public class AppointmentNotificationController {
 
         return ResponseEntity.ok(notifications);
     }
+
+    @PutMapping("/{appointmentId}/mark-as-sent")
+    public ResponseEntity<Void> markNotificationAsSent(@PathVariable Long appointmentId) {
+        AppointmentNotification notification = notificationRepository.findByAppointmentID(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Notification not found for appointment ID: " + appointmentId));
+
+        notification.setIsSend(true);
+        notificationRepository.save(notification);
+
+        return ResponseEntity.ok().build();
+    }
+
+
 }

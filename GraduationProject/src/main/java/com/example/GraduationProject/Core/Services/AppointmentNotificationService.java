@@ -48,24 +48,24 @@ public class AppointmentNotificationService {
 
 
 
-    @Scheduled(fixedRate = 3600000) // تشغيلها كل ساعة
-    public void sendNotifications() {
-        LocalDate today = LocalDate.now();
-        LocalTime now = LocalTime.now();
-
-        // ضبط التنسيق لضمان تطابقه مع البيانات المخزنة
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-        String formattedTime = now.format(timeFormatter);
-
-        List<AppointmentNotification> notifications = notificationRepository
-                .findByDateAndTimeAndIsSendFalse(today, formattedTime);
-
-        for (AppointmentNotification notification : notifications) {
-            sendNotificationToUser(notification);
-            notification.setIsSend(true);
-            notificationRepository.save(notification);
-        }
-    }
+//    @Scheduled(fixedRate = 3600000) // تشغيلها كل ساعة
+//    public void sendNotifications() {
+//        LocalDate today = LocalDate.now();
+//        LocalTime now = LocalTime.now();
+//
+//        // ضبط التنسيق لضمان تطابقه مع البيانات المخزنة
+//        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+//        String formattedTime = now.format(timeFormatter);
+//
+//        List<AppointmentNotification> notifications = notificationRepository
+//                .findByDateAndTimeAndIsSendFalse(today, formattedTime);
+//
+//        for (AppointmentNotification notification : notifications) {
+//            sendNotificationToUser(notification);
+//            notification.setIsSend(true);
+//            notificationRepository.save(notification);
+//        }
+//    }
 
 
     // ميثود لإرسال الإشعارات (عبر Firebase أو SMS أو Email)
