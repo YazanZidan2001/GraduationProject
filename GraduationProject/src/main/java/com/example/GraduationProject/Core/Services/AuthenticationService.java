@@ -2,6 +2,7 @@ package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.SessionManagement;
 import org.springframework.core.io.UrlResource;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.multipart.MultipartFile;
 import com.example.GraduationProject.Common.DTOs.LoginDTO;
 import com.example.GraduationProject.Common.DTOs.PaginationDTO;
@@ -293,27 +294,24 @@ public class AuthenticationService extends SessionManagement {
 
     @Transactional
     public AuthenticationResponse authenticate(LoginDTO request) throws UserNotFoundException {
-        // Determine if contactInfo is an email or phone
         User user;
-        if (request.getContactInfo().contains("@")) {
-            // Treat as email
+        boolean isEmail = request.getContactInfo().contains("@");
+
+        // Fetch user based on contact type
+        if (isEmail) {
             user = repository.findByEmail(request.getContactInfo())
-                    .orElseThrow(() -> new UserNotFoundException("User not found with provided email"));
+                    .orElseThrow(() -> new UserNotFoundException("Email not found"));
         } else {
-            // Treat as phone number
             user = repository.findByPhone(request.getContactInfo())
-                    .orElseThrow(() -> new UserNotFoundException("User not found with provided phone number"));
+                    .orElseThrow(() -> new UserNotFoundException("Phone number not found"));
         }
 
-        // Authenticate the user
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        user.getEmail(), // Use user's email for authentication
-                        request.getPassword()
-                )
-        );
+        // Verify password
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Incorrect password");
+        }
 
-        // Generate tokens
+        // Generate JWT tokens
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
         revokeAllUserTokens(user);
@@ -323,9 +321,10 @@ public class AuthenticationService extends SessionManagement {
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
                 .role(user.getRole())
-                .message("User LoggedIn successfully")
+                .message("User logged in successfully")
                 .build();
     }
+
 
 
     public void saveUserToken(User user, String jwtToken) {

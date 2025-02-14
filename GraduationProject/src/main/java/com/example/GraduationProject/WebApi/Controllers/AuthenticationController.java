@@ -5,6 +5,7 @@ import com.example.GraduationProject.WebApi.Exceptions.NotFoundException;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.multipart.MultipartFile;
 import com.example.GraduationProject.Core.Services.PatientService;
 import com.example.GraduationProject.Core.Services.VerificationService;
@@ -92,9 +93,19 @@ public class AuthenticationController extends SessionManagement {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> Login(@RequestBody @Valid LoginDTO request) throws UserNotFoundException {
-        return ResponseEntity.ok(authenticationService.authenticate(request));
+    public ResponseEntity<?> Login(@RequestBody @Valid LoginDTO request) {
+        try {
+            return ResponseEntity.ok(authenticationService.authenticate(request));
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (BadCredentialsException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect password");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred");
+        }
     }
+
 
     @PostMapping("/login-doctor")
     public ResponseEntity<GeneralResponse> login(@RequestBody @Valid LoginDTO request) throws UserNotFoundException {
@@ -156,16 +167,22 @@ public class AuthenticationController extends SessionManagement {
         String token = request.replace("Bearer ", "");
         return authenticationService.extractUserFromToken(token);
     }
+
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         logoutService.logout(request, response, authentication);
         return ResponseEntity.status(HttpStatus.OK).body("Logged out successfully");
     }
+
+
     @PostMapping("/expire-token/{id}")
     public boolean expireToken(@PathVariable Long id,@RequestParam String token)  {
 
         return authenticationService.expiredToken(id,token);
     }
+
+
     @PostMapping("/changePassword")
     public ResponseEntity<AuthenticationResponse> changePassword(
             @RequestParam String oldPassword,
