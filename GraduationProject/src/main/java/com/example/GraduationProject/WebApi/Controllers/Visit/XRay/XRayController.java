@@ -50,6 +50,29 @@ public class XRayController extends SessionManagement {
         return ResponseEntity.ok("XRay added successfully");
     }
 
+    @PutMapping("/updateXRay/{xrayId}")
+    public ResponseEntity<?> updateXRayDetails(
+            @PathVariable Long xrayId,
+            @RequestBody XRay updatedXRay,
+            HttpServletRequest request) throws UserNotFoundException {
+
+        // Validate doctor authorization
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+
+        try {
+             xRayService.updateXRayDetails(xrayId, updatedXRay);
+            return ResponseEntity.ok("X Ray details updated successfully");
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while updating the XRay.");
+        }
+    }
+
+
     @PostMapping("/xray/batch")
     public ResponseEntity<String> addMultipleXRays(@RequestBody List<XRay> xRays, HttpServletRequest request)
             throws UserNotFoundException, NotFoundException {

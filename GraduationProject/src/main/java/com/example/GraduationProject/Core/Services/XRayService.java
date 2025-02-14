@@ -40,6 +40,41 @@ public class XRayService {
     }
 
     @Transactional
+    public void updateXRayDetails(Long xrayId, XRay updatedXRay) {
+        // 1) Fetch the existing XRay
+        XRay existingXRay = xRayRepository.findById(xrayId)
+                .orElseThrow(() -> new IllegalArgumentException("XRay not found with ID: " + xrayId));
+
+        // 2) Update only non-null fields (excluding resultFilePath)
+        if (updatedXRay.getTitle() != null) {
+            existingXRay.setTitle(updatedXRay.getTitle());
+        }
+        if (updatedXRay.getXrayTime() != null) {
+            existingXRay.setXrayTime(updatedXRay.getXrayTime());
+        }
+        if (updatedXRay.getXrayDate() != null) {
+            existingXRay.setXrayDate(updatedXRay.getXrayDate());
+        }
+        if (updatedXRay.getXrayDetails() != null) {
+            existingXRay.setXrayDetails(updatedXRay.getXrayDetails());
+        }
+        if (updatedXRay.getXrayResult() != null) {
+            existingXRay.setXrayResult(updatedXRay.getXrayResult());
+        }
+        if (updatedXRay.getRemark() != null) {
+            existingXRay.setRemark(updatedXRay.getRemark());
+        }
+
+//        // 3) Explicitly preserve resultFilePath (just to be safe)
+//        String existingResultFilePath = existingXRay.getResultFilePath();
+//        existingXRay.setResultFilePath(existingResultFilePath);
+
+        // 4) Save and return updated entity
+         xRayRepository.save(existingXRay);
+    }
+
+
+    @Transactional
     public void addMultipleXRays(List<XRay> xRays) throws NotFoundException {
         for (XRay xRay : xRays) {
             Visit visit = visitRepository.findByVisitID(xRay.getVisitId())

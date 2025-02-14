@@ -39,6 +39,38 @@ public class LabTestService {
     }
 
     @Transactional
+    public void updateLabTestDetails(Long testId, LabTest updatedLabTest) {
+        // 1) Fetch the existing LabTest
+        LabTest existingLabTest = labTestRepository.findById(testId)
+                .orElseThrow(() -> new IllegalArgumentException("Lab test not found with ID: " + testId));
+
+        // 2) Update only non-null fields (excluding resultFilePath)
+        if (updatedLabTest.getTitle() != null) {
+            existingLabTest.setTitle(updatedLabTest.getTitle());
+        }
+        if (updatedLabTest.getTestTime() != null) {
+            existingLabTest.setTestTime(updatedLabTest.getTestTime());
+        }
+        if (updatedLabTest.getTestDate() != null) {
+            existingLabTest.setTestDate(updatedLabTest.getTestDate());
+        }
+        if (updatedLabTest.getTestDetails() != null) {
+            existingLabTest.setTestDetails(updatedLabTest.getTestDetails());
+        }
+        if (updatedLabTest.getTestResult() != null) {
+            existingLabTest.setTestResult(updatedLabTest.getTestResult());
+        }
+        if (updatedLabTest.getRemark() != null) {
+            existingLabTest.setRemark(updatedLabTest.getRemark());
+        }
+
+        // 3) Save the updated entity
+        labTestRepository.save(existingLabTest);
+    }
+
+
+
+    @Transactional
     public void addMultipleLabTests(List<LabTest> labTests) throws NotFoundException {
         for (LabTest labTest : labTests) {
             Visit visit = visitRepository.findByVisitID(labTest.getVisitId())

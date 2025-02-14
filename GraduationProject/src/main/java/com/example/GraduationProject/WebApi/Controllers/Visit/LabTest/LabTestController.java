@@ -49,6 +49,28 @@ public class LabTestController extends SessionManagement {
         return ResponseEntity.ok("Lab test added successfully");
     }
 
+    @PutMapping("updateLabTest/{testId}")
+    public ResponseEntity<?> updateLabTestDetails(
+            @PathVariable Long testId,
+            @RequestBody LabTest updatedLabTest,
+            HttpServletRequest request) throws UserNotFoundException {
+
+        // Validate doctor authorization
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+        validateLoggedInDoctor(user);
+        try {
+            labTestService.updateLabTestDetails(testId, updatedLabTest);
+            return ResponseEntity.ok("Lab test details updated successfully");
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating the lab test.");
+        }
+
+    }
+
+
     @PostMapping("/labtest/batch")
     public ResponseEntity<String> addMultipleLabTests(@RequestBody List<LabTest> labTests, HttpServletRequest request)
             throws UserNotFoundException, NotFoundException {
@@ -78,7 +100,8 @@ public class LabTestController extends SessionManagement {
                     .registerModule(new JavaTimeModule())
                     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-            List<LabTest> labTests = mapper.readValue(labTestsJson, new TypeReference<List<LabTest>>() {});
+            List<LabTest> labTests = mapper.readValue(labTestsJson, new TypeReference<List<LabTest>>() {
+            });
 
             // 3) Validate the parsed LabTest objects
             if (labTests.isEmpty()) {
@@ -109,8 +132,6 @@ public class LabTestController extends SessionManagement {
                     .body("An unexpected error occurred: " + ex.getMessage());
         }
     }
-
-
 
 
     /**
@@ -281,7 +302,6 @@ public class LabTestController extends SessionManagement {
                 .contentType(MediaType.parseMediaType(contentType))
                 .body(resource);
     }
-
 
 
 }
