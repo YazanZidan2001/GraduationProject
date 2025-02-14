@@ -39,6 +39,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 import org.springframework.core.io.Resource;
@@ -406,21 +407,42 @@ public class AuthenticationService extends SessionManagement {
                 .build();
     }
 
+//    @Transactional
+//    public void sendPasswordResetEmail(String email) throws UserNotFoundException, MessagingException {
+//        var userEmail = repository.findByEmail(email)
+//                .orElseThrow(() -> new UserNotFoundException("User not found"));
+//
+//        String verificationCode = UUID.randomUUID().toString();
+//        Email emailEntity = Email.builder()
+//                .email(email)
+//                .verificationCode(verificationCode)
+//                .verified(false)
+//                .build();
+//        emailRepository.save(emailEntity);
+//        String verificationUrl = "http://localhost:8080/resetPasswordPage?verificationCode=" + verificationCode + "&email=" + email;
+//        emailService.sendPasswordResetEmail(email, "Email Verification", verificationUrl);
+//    }
+
     @Transactional
     public void sendPasswordResetEmail(String email) throws UserNotFoundException, MessagingException {
         var userEmail = repository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        String verificationCode = UUID.randomUUID().toString();
+        // Generate a 6-digit verification code
+        String verificationCode = String.valueOf(new Random().nextInt(900000) + 100000);
+
         Email emailEntity = Email.builder()
                 .email(email)
                 .verificationCode(verificationCode)
                 .verified(false)
                 .build();
         emailRepository.save(emailEntity);
-        String verificationUrl = "http://localhost:8080/resetPasswordPage?verificationCode=" + verificationCode + "&email=" + email;
-        emailService.sendPasswordResetEmail(email, "Email Verification", verificationUrl);
+
+        // Send email with just the verification code
+        emailService.sendPasswordResetEmail2(email, "Password Reset Code",
+                "Your password reset verification code is: <b>" + verificationCode + "</b>");
     }
+
 
     @Transactional
     public GeneralResponse verifyCodeAndResetPassword(String email, String verificationCode, String newPassword) throws UserNotFoundException {

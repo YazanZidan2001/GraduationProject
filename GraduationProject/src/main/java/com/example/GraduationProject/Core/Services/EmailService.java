@@ -46,6 +46,20 @@ public class EmailService {
     }
 
 
+    public void sendPasswordResetEmail2(String to, String subject, String content) throws MessagingException {
+        MimeMessage message = emailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setFrom("yazoonzidan@gmail.com");
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(content, true); // HTML formatted email
+
+        emailSender.send(message);
+    }
+
+
+
     public void sentNotificationEmail(String to, String subject, String message) throws MessagingException {
         MimeMessage mimeMessage = emailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);

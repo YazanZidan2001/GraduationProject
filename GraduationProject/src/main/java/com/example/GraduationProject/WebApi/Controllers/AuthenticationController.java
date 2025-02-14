@@ -128,7 +128,7 @@ public class AuthenticationController extends SessionManagement {
     @PostMapping("/resetPassword")
     public ResponseEntity<GeneralResponse> verifyCodeAndResetPassword(@RequestParam String email,
                                                                       @RequestParam String verificationCode,
-                                                                      @RequestBody String newPassword
+                                                                      @RequestParam String newPassword
     ) throws UserNotFoundException {
         GeneralResponse response = authenticationService.verifyCodeAndResetPassword(
                 email, verificationCode, newPassword);
