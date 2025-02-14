@@ -24,9 +24,9 @@ public class QualificationService {
     // Get qualifications by doctor ID
     public List<Qualification> getQualificationsByDoctorId(Long doctorId) throws NotFoundException {
         List<Qualification> qualifications = qualificationRepository.findByDoctorId(doctorId);
-        if (qualifications.isEmpty()) {
-            throw new NotFoundException("No qualifications found for doctor ID " + doctorId);
-        }
+//        if (qualifications.isEmpty()) {
+//            throw new NotFoundException("No qualifications found for doctor ID " + doctorId);
+//        }
         return qualifications;
     }
 

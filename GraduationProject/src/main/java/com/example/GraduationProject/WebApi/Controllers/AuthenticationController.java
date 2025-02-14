@@ -158,6 +158,23 @@ public class AuthenticationController extends SessionManagement {
 
     }
 
+    @PostMapping("/resetPasswordByEmail")
+    public ResponseEntity<?> resetPasswordByEmail(@RequestParam String email,
+                                                  @RequestParam String newPassword) {
+
+        try {
+            GeneralResponse response = authenticationService.resetPasswordByEmail(
+                    email, newPassword);
+            return ResponseEntity.ok(response);
+        }
+        catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+
+    }
+
+
+
     @PostMapping("")
     public ResponseEntity<?> RegisterPatient(@RequestBody @Valid Patient request, HttpServletRequest httpServletRequest) {
         try {

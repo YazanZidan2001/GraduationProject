@@ -24,9 +24,9 @@ public class ExperienceService {
 
     public List<Experience> getExperiencesByDoctorId(Long doctorId) throws NotFoundException {
         List<Experience> experiences = experienceRepository.findByDoctorId(doctorId);
-        if (experiences.isEmpty()) {
-            throw new NotFoundException("No experiences found for doctor ID " + doctorId);
-        }
+//        if (experiences.isEmpty()) {
+//            throw new NotFoundException("No experiences found for doctor ID " + doctorId);
+//        }
         return experiences;
     }
 

@@ -456,6 +456,16 @@ public class AuthenticationService extends SessionManagement {
         return resetPassword(email, newPassword);
     }
 
+    @Transactional
+    public GeneralResponse resetPasswordByEmail(String email, String newPassword) throws UserNotFoundException {
+        Email emailEntity = emailRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("email not found"));
+            emailEntity.setVerified(true);
+            emailRepository.save(emailEntity);
+
+        return resetPassword(email, newPassword);
+    }
+
 
     @Transactional
     public AuthenticationResponse changePasswordForToken(User user, String oldPassword, String newPassword) throws UserNotFoundException {
