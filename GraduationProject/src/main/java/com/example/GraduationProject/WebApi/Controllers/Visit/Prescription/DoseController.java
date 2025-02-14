@@ -102,5 +102,25 @@ public class DoseController extends SessionManagement {
         return ResponseEntity.ok("Dose marked as taken.");
     }
 
+    @PutMapping("/{doseId}/mark-as-not-taken")
+    public ResponseEntity<?> markDoseAsNotTaken(@PathVariable Long doseId, HttpServletRequest request) throws UserNotFoundException, NotFoundException {
+        // 1) استخراج المستخدم من التوكن
+        String token = authenticationService.extractToken(request);
+        User user = authenticationService.extractUserFromToken(token);
+
+        // 2) التأكد أن المستخدم هو مريض
+        validateLoggedInPatient(user);
+
+        // 3) البحث عن الجرعة
+        DoseSchedule dose = doseScheduleService.findById(doseId)
+                .orElseThrow(() -> new NotFoundException("Dose not found"));
+
+        // 4) تحديث الجرعة إلى "تم أخذها"
+        dose.setDoseTaken(false);
+        doseScheduleService.save(dose);
+
+        return ResponseEntity.ok("Dose marked as not taken.");
+    }
+
 }
 

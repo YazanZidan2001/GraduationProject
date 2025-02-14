@@ -131,19 +131,31 @@ public class AuthenticationController extends SessionManagement {
 
 
     @PostMapping("/send-verification-code-to-resetPassword")
-    public ResponseEntity<String> sendPasswordResetEmail(@RequestParam String email) throws UserNotFoundException, MessagingException, MessagingException {
+    public ResponseEntity<String> sendPasswordResetEmail(@RequestParam String email) throws  MessagingException {
+
+        try{
         authenticationService.sendPasswordResetEmail(email);
         return ResponseEntity.ok("Verification code sent to email");
+        }
+        catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
     }
 
     @PostMapping("/resetPassword")
-    public ResponseEntity<GeneralResponse> verifyCodeAndResetPassword(@RequestParam String email,
-                                                                      @RequestParam String verificationCode,
-                                                                      @RequestParam String newPassword
-    ) throws UserNotFoundException {
-        GeneralResponse response = authenticationService.verifyCodeAndResetPassword(
-                email, verificationCode, newPassword);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> verifyCodeAndResetPassword(@RequestParam String email,
+                                                        @RequestParam String verificationCode,
+                                                        @RequestParam String newPassword) {
+
+        try {
+            GeneralResponse response = authenticationService.verifyCodeAndResetPassword(
+                    email, verificationCode, newPassword);
+            return ResponseEntity.ok(response);
+        }
+         catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+
     }
 
     @PostMapping("")
