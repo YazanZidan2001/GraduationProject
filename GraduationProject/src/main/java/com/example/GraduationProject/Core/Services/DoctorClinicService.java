@@ -26,6 +26,12 @@ public class DoctorClinicService {
 
     @Transactional
     public void addDoctorClinic(DoctorClinic doctorClinic) {
+
+        boolean exists = doctorClinicRepository.existsByDoctorAndClinic(doctorClinic.getDoctorId(), doctorClinic.getClinicId());
+
+        if (exists) {
+            throw new IllegalArgumentException("Doctor is already assigned to this clinic.");
+        }
         doctorClinic.setNeedInterval(true); // Default to true
         doctorClinic.setActive(true);      // Default to true
         doctorClinic.setTimeInterval(20);     // Default to no interval

@@ -35,8 +35,12 @@ public class DoctorClinicController extends SessionManagement {
         User user = service.extractUserFromToken(token);
         validateLoggedInAdmin(user);
 
-        doctorClinicService.addDoctorClinic(request);
-        return ResponseEntity.ok(GeneralResponse.builder().message("DoctorClinic added successfully").build());
+        try {
+            doctorClinicService.addDoctorClinic(request);
+            return ResponseEntity.ok(GeneralResponse.builder().message("DoctorClinic added successfully").build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(GeneralResponse.builder().message(e.getMessage()).build());
+        }
     }
 
     @GetMapping("/doctors/{clinicId}")

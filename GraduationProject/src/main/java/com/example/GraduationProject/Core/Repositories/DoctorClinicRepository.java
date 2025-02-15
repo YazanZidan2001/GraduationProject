@@ -32,5 +32,9 @@ public interface DoctorClinicRepository extends JpaRepository<DoctorClinic, Doct
     @Query("SELECT dc.doctor FROM DoctorClinic dc WHERE dc.clinicId = :clinicId")
     List<Doctor> findDoctorsByClinicId(@Param("clinicId") Long clinicId);
 
+    @Query("SELECT COUNT(dc) > 0 FROM DoctorClinic dc WHERE dc.doctorId = :doctorId AND dc.clinicId = :clinicId")
+    boolean existsByDoctorAndClinic(@Param("doctorId") Long doctorId, @Param("clinicId") Long clinicId);
+
+
 
 }
