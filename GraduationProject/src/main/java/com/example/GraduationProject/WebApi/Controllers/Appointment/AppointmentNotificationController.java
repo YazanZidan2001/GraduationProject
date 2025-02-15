@@ -23,7 +23,7 @@ public class AppointmentNotificationController {
         User user = authenticationService.extractUserFromToken(token);
 
         List<AppointmentNotification> notifications = notificationRepository
-                .findByPatientIDAndIsSendFalse(user.getUserID());
+                .findByPatientIDAndIsSendFalseAndAppointmentActive(user.getUserID());
 
         return ResponseEntity.ok(notifications);
     }

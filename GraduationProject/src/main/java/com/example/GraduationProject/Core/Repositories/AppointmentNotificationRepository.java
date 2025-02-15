@@ -27,8 +27,9 @@ public interface AppointmentNotificationRepository extends JpaRepository<Appoint
         AND an.isSend = false 
         AND a.isDone = false 
         AND a.isCancelled = false
+        AND a.appointmentDate >= CURRENT_DATE
     """)
-    List<AppointmentNotification> findByPatientIDAndIsSendFalse(Long patientID);
+    List<AppointmentNotification> findByPatientIDAndIsSendFalseAndAppointmentActive(Long patientID);
 
     Optional<AppointmentNotification> findByAppointmentID(Long appointmentID);
 
