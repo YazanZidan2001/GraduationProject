@@ -27,7 +27,7 @@ public class DoctorClinicService {
     public void addDoctorClinic(DoctorClinic doctorClinic) {
         doctorClinic.setNeedInterval(true); // Default to true
         doctorClinic.setActive(true);      // Default to true
-        doctorClinic.setTimeInterval(0);       // Default to no interval
+        doctorClinic.setTimeInterval(20);     // Default to no interval
         doctorClinicRepository.save(doctorClinic);
     }
 
