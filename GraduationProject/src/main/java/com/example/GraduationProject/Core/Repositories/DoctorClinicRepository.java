@@ -1,6 +1,7 @@
 package com.example.GraduationProject.Core.Repositories;
 
 import com.example.GraduationProject.Common.CompositeKey.DoctorClinicId;
+import com.example.GraduationProject.Common.Entities.Doctor;
 import com.example.GraduationProject.Common.Entities.DoctorClinic;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -27,5 +28,9 @@ public interface DoctorClinicRepository extends JpaRepository<DoctorClinic, Doct
 
     @Query("SELECT dc FROM DoctorClinic dc WHERE dc.doctorId = :doctorId AND dc.isActive = true")
     Optional<DoctorClinic> findByDoctorIdAndIsActiveTrue(@Param("doctorId") Long doctorId);
+
+    @Query("SELECT dc.doctor FROM DoctorClinic dc WHERE dc.clinicId = :clinicId")
+    List<Doctor> findDoctorsByClinicId(@Param("clinicId") Long clinicId);
+
 
 }

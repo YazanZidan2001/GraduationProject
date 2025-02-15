@@ -1,5 +1,6 @@
 package com.example.GraduationProject.WebApi.Controllers.Admin.Clinic;
 
+import com.example.GraduationProject.Common.Entities.Doctor;
 import com.example.GraduationProject.Common.Entities.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -37,6 +38,17 @@ public class DoctorClinicController extends SessionManagement {
         doctorClinicService.addDoctorClinic(request);
         return ResponseEntity.ok(GeneralResponse.builder().message("DoctorClinic added successfully").build());
     }
+
+    @GetMapping("/doctors/{clinicId}")
+    public ResponseEntity<List<Doctor>> getDoctorsByClinicId(@PathVariable Long clinicId, HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        String token = service.extractToken(httpServletRequest);
+        User user = service.extractUserFromToken(token);
+        validateLoggedInAdmin(user); // Ensure only admins can access this
+
+        List<Doctor> doctors = doctorClinicService.getDoctorsByClinicId(clinicId);
+        return ResponseEntity.ok(doctors);
+    }
+
 
     @GetMapping("/clinic-ids/{doctorId}")
     public ResponseEntity<List<Long>> getClinicIdsByDoctorId(@PathVariable Long doctorId, HttpServletRequest httpServletRequest) throws UserNotFoundException {

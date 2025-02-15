@@ -1,6 +1,7 @@
 package com.example.GraduationProject.Core.Services;
 
 import com.example.GraduationProject.Common.CompositeKey.DoctorClinicId;
+import com.example.GraduationProject.Common.Entities.Doctor;
 import com.example.GraduationProject.Core.Repositories.ClinicRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -70,6 +71,10 @@ public class DoctorClinicService {
                 .orElseThrow(() -> new DoctorClinicNotFoundException("DoctorClinic not found with Doctor ID: " + doctorId + " and Clinic ID: " + clinicId));
     }
 
+
+    public List<Doctor> getDoctorsByClinicId(Long clinicId) {
+        return doctorClinicRepository.findDoctorsByClinicId(clinicId);
+    }
 
 
 
