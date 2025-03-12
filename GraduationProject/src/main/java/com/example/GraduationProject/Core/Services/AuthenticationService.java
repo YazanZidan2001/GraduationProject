@@ -155,6 +155,30 @@ public class AuthenticationService extends SessionManagement {
     }
 
 
+    @Transactional
+    public Resource getPhotoByUserId(Long userId) throws IOException, UserNotFoundException {
+        // Find user by ID
+        User user = repository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        // Get photo path from user entity
+        String photoPath = user.getPhotoPath();
+        if (photoPath == null || photoPath.isEmpty()) {
+            throw new FileNotFoundException("No photo found for the user.");
+        }
+
+        // Resolve the file path
+        File photoFile = new File(photoPath);
+        if (!photoFile.exists()) {
+            throw new FileNotFoundException("Photo file not found at path: " + photoPath);
+        }
+
+        // Log for debugging
+        System.out.println("Resolved photo path: " + photoFile.getAbsolutePath());
+
+        // Return the photo as a resource
+        return new UrlResource(photoFile.toURI());
+    }
 
 
 

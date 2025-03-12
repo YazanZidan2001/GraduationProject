@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 import com.example.GraduationProject.SessionManagement;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.concurrent.TimeUnit;
@@ -74,6 +75,27 @@ public class AuthenticationController extends SessionManagement {
                 .body(photo);
     }
 
+
+    @GetMapping("/{userId}/photo")
+    public ResponseEntity<Resource> getUserPhoto(@PathVariable Long userId) {
+        try {
+            Resource photo = authenticationService.getPhotoByUserId(userId);
+
+            // Set content type dynamically
+            String contentType = Files.probeContentType(photo.getFile().toPath());
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(photo);
+        } catch (FileNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IOException | UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
 
 
